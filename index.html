@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <!-- CỰC KỲ QUAN TRỌNG: Bắt buộc có dòng này thì iOS mới bật mode Standalone -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FumeniERP">
+
+    <!-- Đã điền link ảnh logo của bạn -->
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FumeniERP</title>
+
+    <script>
+        // KIỂM TRA MODE STANDALONE TRÊN IOS
+        // Nếu mở từ Màn hình chính (PWA/Standalone mode) -> Chuyển hướng ngay sang Google Apps Script
+        if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
+            window.location.replace("https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec"); // <-- Thay link Web App /exec của bạn
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .card {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            max-width: 360px;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 18px;
+            margin-bottom: 16px;
+        }
+        .title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .desc {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <img src="https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png" class="logo" alt="Logo">
+        <div class="title">Cài đặt FumeniERP</div>
+        <div class="desc">
+            Vui lòng nhấn nút <strong>Chia sẻ (Share)</strong> bên dưới thanh công cụ Safari, sau đó chọn <strong>"Thêm vào MH chính" (Add to Home Screen)</strong>.
+        </div>
+    </div>
+
+</body>
+</html>
