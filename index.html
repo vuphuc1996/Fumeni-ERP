@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>FumeniERP</title>
 
+    <!-- Màu thanh trạng thái cho Android Chrome -->
+    <meta name="theme-color" content="#0f172a">
+
+    <!-- Cấu hình PWA cho iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FumeniERP">
@@ -17,51 +21,62 @@
 
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body {
+        html {
+            width: 100%; height: 100dvh; overflow: hidden; background-color: #0f172a;
+        }
+        body {
             margin: 0; padding: 0; width: 100%; height: 100dvh;
             overflow: hidden; background-color: #0f172a;
-            overscroll-behavior-y: none; /* Chống treo/đơ khi vuốt ở ngoài vỏ */
+            display: flex; flex-direction: column;
+            /* Tự động = 0px đối với iPhone 8/Android phẳng; Tự động = 44px-59px với máy Tai thỏ */
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            overscroll-behavior-y: none;
         }
         iframe {
-            width: 100%; height: 100dvh; border: none; display: block;
+            width: 100%; height: 100%; flex: 1; border: none; display: block;
         }
         .safe-pb { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
     </style>
 </head>
 <body class="text-slate-800 antialiased select-none">
 
-    <!-- BANNER HƯỚNG DẪN TẢI VỀ MH CHÍNH (Chỉ hiện khi mở trên Trình duyệt) -->
+    <!-- BANNER HƯỚNG DẪN / TẢI APP THÔNG MINH -->
     <div id="pwa-install-banner" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex flex-col justify-end p-4">
-        <div class="bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-4 animate-slide-up safe-pb">
+        <div class="bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-4 safe-pb">
             <div class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png" class="w-12 h-12 rounded-2xl shadow-md border border-slate-100" alt="Logo">
                 <div>
                     <h3 class="font-bold text-slate-900 text-base">Cài đặt Fumeni ERP</h3>
-                    <p class="text-xs text-slate-500">Thêm ứng dụng vào Màn hình chính để dùng tràn màn hình</p>
+                    <p class="text-xs text-slate-500">Thêm ứng dụng vào Màn hình chính để sử dụng mượt mà nhất</p>
                 </div>
             </div>
 
-            <!-- Hướng dẫn iOS Safari -->
-            <div id="ios-instructions" class="bg-blue-50/80 border border-blue-100 rounded-2xl p-3.5 text-xs text-blue-900 space-y-2">
+            <!-- Hướng dẫn riêng cho iOS Safari -->
+            <div id="ios-instructions" class="hidden bg-blue-50/80 border border-blue-100 rounded-2xl p-3.5 text-xs text-blue-900 space-y-2">
                 <p class="font-bold flex items-center gap-1.5 text-blue-700">
-                    <i class="fa-solid fa-arrow-up-from-bracket"></i> Cách thêm trên iPhone / iPad:
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i> Cách cài trên iPhone / iPad:
                 </p>
                 <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-700 font-medium">
-                    <li>Bấm nút <strong class="text-blue-600">Chia sẻ (Share <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>)</strong> ở thanh dưới trình duyệt.</li>
+                    <li>Bấm nút <strong class="text-blue-600">Chia sẻ (Share <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>)</strong> dưới thanh công cụ Safari.</li>
                     <li>Cuộn xuống chọn <strong class="text-slate-900">"Thêm vào MH chính" (Add to Home Screen)</strong>.</li>
-                    <li>Mở icon từ màn hình chính để vào App tràn 100%.</li>
                 </ol>
             </div>
 
             <div class="flex gap-2 pt-1">
-                <button onclick="launchAppDirectly()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-blue-500/30 active:scale-95 transition-all">
-                    Vào trực tiếp App Web
+                <!-- Nút bấm cài nhanh cho Android -->
+                <button id="btn-android-install" onclick="installAndroidApp()" class="hidden flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-emerald-500/30 active:scale-95 transition-all">
+                    <i class="fa-solid fa-download mr-1.5"></i> Cài đặt App ngay
+                </button>
+                
+                <button onclick="launchAppDirectly()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs active:scale-95 transition-all">
+                    Bỏ qua & Vào App Web
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- IFRAME CHỨA WEB APP GAS -->
+    <!-- KHUNG CHỨA APP GAS -->
     <iframe id="app-iframe" 
         src="https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec" 
         allow="geolocation; microphone; camera; clipboard-write"
@@ -69,12 +84,39 @@
     </iframe>
 
     <script>
-        // Kiểm tra xem trang có đang mở ở chế độ Standalone (App Màn hình chính) không
+        let deferredPrompt;
         const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        // Bắt sự kiện cài đặt native của Android Chrome
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (!isStandalone) {
+                document.getElementById('btn-android-install').classList.remove('hidden');
+                document.getElementById('pwa-install-banner').classList.remove('hidden');
+            }
+        });
 
         if (!isStandalone) {
-            // Nếu mở bằng Safari/Chrome trình duyệt thông thường -> Hiện Banner hướng dẫn
-            document.getElementById('pwa-install-banner').classList.remove('hidden');
+            if (isIOS) {
+                // Nếu là iOS -> Hiện hướng dẫn Share
+                document.getElementById('ios-instructions').classList.remove('hidden');
+                document.getElementById('pwa-install-banner').classList.remove('hidden');
+            } else if (!deferredPrompt) {
+                // Các trình duyệt web khác -> Hiện banner tùy chọn vào trực tiếp
+                document.getElementById('pwa-install-banner').classList.remove('hidden');
+            }
+        }
+
+        function installAndroidApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    deferredPrompt = null;
+                    launchAppDirectly();
+                });
+            }
         }
 
         function launchAppDirectly() {
