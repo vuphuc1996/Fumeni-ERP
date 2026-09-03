@@ -82,14 +82,19 @@
         </div>
     </div>
 
-    <!-- KHUNG CHỨA APP GAS (HIỂN THỊ BÌNH THƯỜNG TRÊN LAPTOP/PC VÀ TRÊN MOBILE ĐÃ CÀI PWA) -->
+    <!-- KHUNG CHỨA APP GAS (Đã ẩn thuộc tính src trực tiếp) -->
     <iframe id="app-iframe" 
-        src="https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec" 
         allow="geolocation; microphone; camera; clipboard-write"
         sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts">
     </iframe>
 
     <script>
+        // Tự động giải mã chuỗi mảng Hex để nạp URL vào iframe
+        (function() {
+            const _0x8f = [0x68,0x74,0x74,0x70,0x73,0x3a,0x2f,0x2f,0x73,0x63,0x72,0x69,0x70,0x74,0x2e,0x67,0x6f,0x6f,0x67,0x6c,0x65,0x2e,0x63,0x6f,0x6d,0x2f,0x6d,0x61,0x63,0x72,0x6f,0x73,0x2f,0x73,0x2f,0x41,0x4b,0x66,0x79,0x63,0x62,0x78,0x48,0x32,0x63,0x32,0x75,0x4e,0x58,0x68,0x31,0x4c,0x31,0x6c,0x75,0x36,0x4c,0x6c,0x32,0x48,0x4f,0x57,0x46,0x78,0x39,0x33,0x32,0x43,0x55,0x35,0x61,0x6e,0x7a,0x63,0x77,0x56,0x34,0x70,0x4c,0x4d,0x59,0x38,0x56,0x67,0x6f,0x2d,0x6b,0x53,0x50,0x53,0x74,0x39,0x69,0x4e,0x4e,0x6b,0x31,0x65,0x42,0x4d,0x67,0x72,0x49,0x59,0x42,0x63,0x53,0x51,0x2f,0x65,0x78,0x65,0x63];
+            document.getElementById('app-iframe').src = String.fromCharCode(..._0x8f);
+        })();
+
         let deferredPrompt;
         
         // Kiểm tra xem ứng dụng đã chạy ở chế độ App độc lập (Standalone - đã thêm ra màn hình chính) chưa
@@ -99,7 +104,6 @@
 
         // Hàm phân biệt chính xác thiết bị di động thực sự với Laptop/PC
         function isPhoneDevice() {
-            // Nếu không phải Mobile UA và màn hình rộng >= 900px thì chắc chắn là Laptop/PC -> Bỏ qua banner
             if (!isMobileUA && window.innerWidth >= 900) return false;
             return window.innerWidth < 768 || (isIOS && !/iPad/.test(navigator.userAgent));
         }
@@ -108,7 +112,6 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // Nếu là điện thoại Android và chưa cài app -> Hiển thị banner khóa kèm nút cài đặt
             if (!isStandalone && isPhoneDevice() && !isIOS) {
                 document.getElementById('btn-android-install').classList.remove('hidden');
                 document.getElementById('pwa-install-banner').classList.remove('hidden');
@@ -117,17 +120,14 @@
 
         // Kiểm tra khi tải trang
         window.addEventListener('load', () => {
-            // NẾU LÀ DI ĐỘNG VÀ CHƯA CÀI PWA RA MÀN HÌNH CHÍNH => HIỂN THỊ BANNER
             if (!isStandalone && isPhoneDevice()) {
                 document.getElementById('pwa-install-banner').classList.remove('hidden');
                 
                 if (isIOS) {
-                    // Nếu là iPhone -> Hiện hướng dẫn bấm nút Share thủ công, ẩn nút cài tự động
                     document.getElementById('ios-instructions').classList.remove('hidden');
                     document.getElementById('btn-android-install').classList.add('hidden');
                 }
             }
-            // NẾU LÀ LAPTOP/PC => isPhoneDevice() trả về false, banner hoàn toàn ẩn, website hiển thị iframe bình thường.
         });
 
         // Xử lý sự kiện khi người dùng bấm nút "Cài đặt App ngay" trên Android
