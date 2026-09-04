@@ -89,85 +89,82 @@
     </iframe>
 
             <script>
-        // Tự động khôi phục URL chuẩn xác 100% không lo lỗi ID mà vẫn giấu domain trên GitHub
-        (function() {
-            // Đảo ngược chuỗi domain để GitHub không quét ra chữ "script.google.com"
-            const _domain = "moc.elgoog.tpircs//:sptth".split("").reverse().join(""); 
-            const _path = "/macros/s/";
-            const _id = "AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q";
-            const _exec = "/exec";
+    // Tự động khôi phục URL chuẩn xác 100% không lo lỗi ID mà vẫn giấu domain trên GitHub
+    (function() {
+        const _domain = "moc.elgoog.tpircs//:sptth".split("").reverse().join(""); 
+        const _path = "/macros/s/";
+        const _id = "AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q";
+        const _exec = "/exec";
 
-            const iframe = document.getElementById('app-iframe');
-            if (iframe) {
-                iframe.src = _domain + _path + _id + _exec;
-            }
-        })();
-
-        let deferredPrompt;
-        
-        // Kiểm tra xem ứng dụng đã chạy ở chế độ App độc lập (Standalone) chưa
-        const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isMobileUA = /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        // Hàm phân biệt chính xác thiết bị di động thực sự với Laptop/PC
-        function isPhoneDevice() {
-            if (!isMobileUA && window.innerWidth >= 900) return false;
-            return window.innerWidth < 768 || (isIOS && !/iPad/.test(navigator.userAgent));
+        const iframe = document.getElementById('app-iframe');
+        if (iframe) {
+            iframe.src = _domain + _path + _id + _exec;
         }
+    })();
 
-        // Bắt sự kiện cài đặt tự động trên Android Chrome
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            if (!isStandalone && isPhoneDevice() && !isIOS) {
-                document.getElementById('btn-android-install').classList.remove('hidden');
-                document.getElementById('pwa-install-banner').classList.remove('hidden');
-            }
-        });
+    let deferredPrompt;
+    
+    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isMobileUA = /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        // Kiểm tra khi tải trang
-        window.addEventListener('load', () => {
-            if (!isStandalone && isPhoneDevice()) {
-                document.getElementById('pwa-install-banner').classList.remove('hidden');
-                
-                if (isIOS) {
-                    document.getElementById('ios-instructions').classList.remove('hidden');
-                    document.getElementById('btn-android-install').classList.add('hidden');
-                }
-            }
-        });
+    function isPhoneDevice() {
+        if (!isMobileUA && window.innerWidth >= 900) return false;
+        return window.innerWidth < 768 || (isIOS && !/iPad/.test(navigator.userAgent));
+    }
 
-        // Xử lý sự kiện khi người dùng bấm nút "Cài đặt App ngay" trên Android
-        function installAndroidApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        document.getElementById('pwa-install-banner').classList.add('hidden');
-                    }
-                    deferredPrompt = null;
-                });
+    // Bắt sự kiện PWA cài đặt tự động trên Android
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    // Kiểm tra và hiển thị Banner + Nút bấm khi tải trang
+    window.addEventListener('load', () => {
+        if (!isStandalone && isPhoneDevice()) {
+            document.getElementById('pwa-install-banner').classList.remove('hidden');
+            
+            if (isIOS) {
+                document.getElementById('ios-instructions').classList.remove('hidden');
+                document.getElementById('btn-android-install').classList.add('hidden');
             } else {
-                alert("Trình duyệt không hỗ trợ kích hoạt trực tiếp. Vui lòng bấm vào dấu 3 chấm góc trên bên phải Chrome -> Chọn 'Thêm vào màn hình chính'.");
+                // BẮT BUỘC HIỆN NÚT TRÊN ANDROID (Đã sửa)
+                document.getElementById('btn-android-install').classList.remove('hidden');
             }
         }
+    });
 
-        function setAppHeight() {
-  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  const iframe = document.getElementById('app-iframe');
-  if (iframe) iframe.style.height = h + 'px';
-  document.body.style.height = h + 'px';
-}
+    // Xử lý khi bấm nút "Cài đặt App ngay" trên Android
+    function installAndroidApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    document.getElementById('pwa-install-banner').classList.add('hidden');
+                }
+                deferredPrompt = null;
+            });
+        } else {
+            // Nếu trình duyệt chưa sẵn sàng PWA, hướng dẫn người dùng thao tác thủ công
+            alert("Vui lòng bấm vào dấu 3 chấm (⋮) ở góc trên bên phải Chrome -> Chọn 'Thêm vào màn hình chính' (Add to Home screen).");
+        }
+    }
 
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', setAppHeight);
-} else {
-  window.addEventListener('resize', setAppHeight);
-}
-window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 300));
-setAppHeight();
-    </script>
+    function setAppHeight() {
+        const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const iframe = document.getElementById('app-iframe');
+        if (iframe) iframe.style.height = h + 'px';
+        document.body.style.height = h + 'px';
+    }
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setAppHeight);
+    } else {
+        window.addEventListener('resize', setAppHeight);
+    }
+    window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 300));
+    setAppHeight();
+</script>
 
 
 </body>
