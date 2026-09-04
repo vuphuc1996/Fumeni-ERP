@@ -152,6 +152,21 @@
                 alert("Trình duyệt không hỗ trợ kích hoạt trực tiếp. Vui lòng bấm vào dấu 3 chấm góc trên bên phải Chrome -> Chọn 'Thêm vào màn hình chính'.");
             }
         }
+
+        function setAppHeight() {
+  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const iframe = document.getElementById('app-iframe');
+  if (iframe) iframe.style.height = h + 'px';
+  document.body.style.height = h + 'px';
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', setAppHeight);
+} else {
+  window.addEventListener('resize', setAppHeight);
+}
+window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 300));
+setAppHeight();
     </script>
 
 
