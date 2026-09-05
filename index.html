@@ -156,11 +156,13 @@
 
     // Tối ưu hóa chiều cao iframe khi bàn phím ảo hoặc thanh công cụ hiển thị
     function setAppHeight() {
-        const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const iframe = document.getElementById('app-iframe');
-        if (iframe) {
-            iframe.style.height = h + 'px';
-        }
+        if (!iframe) return;
+        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const winH = window.innerHeight;
+        const diff = winH - vh;
+        // Chỉ thu nhỏ khi bàn phím ảo thực sự mở (chênh lệch lớn), bỏ qua sai số nhỏ do ẩn/hiện thanh địa chỉ
+        iframe.style.height = (diff > 100 ? vh : winH) + 'px';
     }
 
     if (window.visualViewport) {
