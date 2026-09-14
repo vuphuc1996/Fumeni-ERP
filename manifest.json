@@ -2,14 +2,16 @@
   "name": "Fumeni ERP",
   "short_name": "FumeniERP",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png",
-      "sizes": "any",
-      "type": "image/png"
+      "src": "./logo.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
