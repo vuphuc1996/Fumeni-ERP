@@ -1,7 +1,5 @@
 <!doctype html>
-
 <html lang="vi">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -26,11 +24,11 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    html,
-    body {
+    html {
       width: 100%;
       height: 100%;
       margin: 0;
+      padding: 0;
       overflow: hidden;
       background: #0f172a;
     }
@@ -38,16 +36,53 @@
     body {
       position: fixed;
       inset: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #0f172a;
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    #app-shell {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #0f172a;
     }
 
     #app-iframe {
       display: block;
       width: 100%;
-      height: 100dvh;
       height: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
       border: 0;
+      outline: 0;
       background: #0f172a;
+    }
+
+    /* =========================
+       iOS SAFE AREA
+       ========================= */
+
+    @supports (padding: env(safe-area-inset-bottom)) {
+      #app-shell {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+
+      #app-iframe {
+        height: calc(100% - env(safe-area-inset-bottom, 0px));
+        min-height: calc(100% - env(safe-area-inset-bottom, 0px));
+      }
     }
 
     /* =========================
@@ -60,9 +95,14 @@
       inset: 0;
       z-index: 10000;
       place-items: center;
-      padding: 16px;
+      padding:
+        max(16px, env(safe-area-inset-top, 0px))
+        max(16px, env(safe-area-inset-right, 0px))
+        max(16px, env(safe-area-inset-bottom, 0px))
+        max(16px, env(safe-area-inset-left, 0px));
       background: rgba(15, 23, 42, .94);
       backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
     #pwa-card {
@@ -122,15 +162,10 @@
       cursor: pointer;
     }
   </style>
-
 </head>
 
 <body>
-
-  <!-- =========================
-       PWA INSTALL WARNING
-       ========================= -->
-
+  <!-- PWA install warning -->
   <div id="pwa-banner">
     <div id="pwa-card">
       <img
@@ -138,7 +173,6 @@
         alt="FumeniERP"
       >
 
-```
       <h3>Cài FumeniERP</h3>
 
       <p>
@@ -154,59 +188,41 @@
       </div>
 
       <button id="install-btn" type="button">
-    Cài đặt App
-  </button>
+        Cài đặt App
+      </button>
     </div>
-    ```
-
   </div>
 
-  <!-- =========================
-       GAS APPLICATION
-       ========================= -->
-
-  <iframe id="app-iframe" title="FumeniERP" allow="
-      camera *;
-      microphone *;
-      geolocation *;
-      publickey-credentials-get *;
-      publickey-credentials-create *
-    " sandbox="
-      allow-forms
-      allow-modals
-      allow-popups
-      allow-popups-to-escape-sandbox
-      allow-same-origin
-      allow-scripts
-      allow-downloads
-    " referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  <main id="app-shell" aria-label="FumeniERP">
+    <iframe
+      id="app-iframe"
+      title="FumeniERP"
+      allow="camera *; microphone *; geolocation *; publickey-credentials-get *; publickey-credentials-create *"
+      sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-downloads"
+      referrerpolicy="strict-origin-when-cross-origin"
+    ></iframe>
+  </main>
 
   <script>
-    (() => {
+  (() => {
     const GAS_URL =
       "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
 
+    const GAS_ORIGIN = "https://script.google.com";
     const iframe = document.getElementById("app-iframe");
     const pwaBanner = document.getElementById("pwa-banner");
     const iosHelp = document.getElementById("ios-help");
     const installBtn = document.getElementById("install-btn");
 
-    const isIOS =
-      /iPad|iPhone|iPod/i.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
 
     const isMobile =
       navigator.userAgentData?.mobile === true ||
       isIOS ||
-      /Android|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      ) ||
+      /Android|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
       window.matchMedia("(max-width: 768px)").matches;
 
     const deviceMode = isMobile ? "mobile" : "desktop";
-
-    /* =========================
-       LOAD GAS
-       ========================= */
 
     const params = new URLSearchParams({
       device: deviceMode
@@ -226,7 +242,6 @@
 
     window.addEventListener("beforeinstallprompt", (event) => {
       event.preventDefault();
-
       deferredPrompt = event;
 
       if (isMobile && !standalone) {
@@ -250,8 +265,8 @@
 
       try {
         await deferredPrompt.prompt();
-      } catch (e) {
-        console.warn("PWA install prompt failed", e);
+      } catch (error) {
+        console.warn("PWA install prompt failed", error);
       }
 
       deferredPrompt = null;
@@ -259,26 +274,33 @@
     });
 
     /* =========================
-       VIEWPORT / MOBILE HEIGHT
+       VIEWPORT / iOS KEYBOARD
        ========================= */
 
     const syncHeight = () => {
-      const h =
-        window.visualViewport?.height ||
-        window.innerHeight;
+      const visualHeight =
+        window.visualViewport?.height || window.innerHeight;
 
-      iframe.style.height = `${h}px`;
+      const safeBottom =
+        parseFloat(
+          getComputedStyle(document.documentElement)
+            .getPropertyValue("--fumeni-safe-bottom") || "0"
+        ) || 0;
+
+      iframe.style.height = `${Math.max(0, visualHeight - safeBottom)}px`;
     };
 
-    window.visualViewport?.addEventListener(
-      "resize",
-      syncHeight
-    );
+    /* Keep the visual viewport independent from keyboard/address-bar changes. */
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", syncHeight);
+      window.visualViewport.addEventListener("scroll", syncHeight);
+    }
 
-    window.addEventListener(
-      "orientationchange",
-      () => setTimeout(syncHeight, 250)
-    );
+    window.addEventListener("resize", syncHeight);
+
+    window.addEventListener("orientationchange", () => {
+      setTimeout(syncHeight, 250);
+    });
 
     syncHeight();
 
@@ -288,10 +310,7 @@
 
     function b64url(buf) {
       return btoa(
-        String.fromCharCode.apply(
-          null,
-          new Uint8Array(buf)
-        )
+        String.fromCharCode.apply(null, new Uint8Array(buf))
       )
         .replace(/\+/g, "-")
         .replace(/\//g, "_")
@@ -337,224 +356,142 @@
         );
       }
 
-      /* =========================
-         REGISTER BIOMETRIC
-         ========================= */
-
       if (action === "WEBAUTHN_CREATE") {
-        const maNv =
-          String(
-            (payload || {}).maNv || "user"
-          ).trim();
+        const maNv = String(
+          (payload || {}).maNv || "user"
+        ).trim();
 
         const credential =
           await navigator.credentials.create({
             publicKey: {
               challenge: randomChallenge(),
-
               rp: {
                 name: "Fumeni ERP"
               },
-
               user: {
-                id:
-                  new TextEncoder().encode(maNv),
-
+                id: new TextEncoder().encode(maNv),
                 name: maNv,
-
                 displayName: maNv
               },
-
               pubKeyCredParams: [
-                {
-                  type: "public-key",
-                  alg: -7
-                },
-                {
-                  type: "public-key",
-                  alg: -257
-                }
+                { type: "public-key", alg: -7 },
+                { type: "public-key", alg: -257 }
               ],
-
               authenticatorSelection: {
-                authenticatorAttachment:
-                  "platform",
-
-                userVerification:
-                  "required"
+                authenticatorAttachment: "platform",
+                userVerification: "required"
               },
-
               timeout: 60000,
-
               attestation: "none"
             }
           });
 
+        if (!credential) {
+          throw new Error("Không tạo được credential.");
+        }
+
         return {
-          credentialId:
-            b64url(credential.rawId)
+          credentialId: b64url(credential.rawId)
         };
       }
 
-      /* =========================
-         AUTHENTICATE BIOMETRIC
-         ========================= */
-
       if (action === "WEBAUTHN_GET") {
-        const credentialId =
-          String(
-            (payload || {}).credentialId || ""
-          ).trim();
+        const credentialId = String(
+          (payload || {}).credentialId || ""
+        ).trim();
 
         if (!credentialId) {
-          throw new Error(
-            "Thiếu Credential ID."
-          );
+          throw new Error("Thiếu Credential ID.");
         }
 
         const assertion =
           await navigator.credentials.get({
             publicKey: {
               challenge: randomChallenge(),
-
               allowCredentials: [
                 {
-                  id:
-                    fromB64url(credentialId),
-
+                  id: fromB64url(credentialId),
                   type: "public-key",
-
                   transports: ["internal"]
                 }
               ],
-
-              userVerification:
-                "required",
-
+              userVerification: "required",
               timeout: 60000
             }
           });
 
         return {
           verified: !!assertion,
-
-          credentialId:
-            assertion
-              ? b64url(assertion.rawId)
-              : ""
+          credentialId: assertion
+            ? b64url(assertion.rawId)
+            : ""
         };
       }
 
-      throw new Error(
-        "Bridge action không hợp lệ."
-      );
+      throw new Error("Bridge action không hợp lệ.");
     }
 
-    /* =========================
-       MESSAGE BRIDGE
-       ========================= */
+    window.addEventListener("message", async (event) => {
+      if (event.source !== iframe.contentWindow) return;
 
-    window.addEventListener(
-      "message",
-      async (event) => {
-        if (
-          event.source !==
-          iframe.contentWindow
-        ) {
-          return;
-        }
+      /* Never accept browser-extension / unrelated origins. */
+      if (event.origin !== GAS_ORIGIN) return;
 
-        const data =
-          event.data || {};
+      const data = event.data || {};
 
-        if (
-          data.type !==
-          "FUMENI_DEVICE_BRIDGE_REQUEST"
-        ) {
-          return;
-        }
+      if (data.type !== "FUMENI_DEVICE_BRIDGE_REQUEST") return;
 
-        const requestId =
-          String(
-            data.requestId || ""
-          );
+      const requestId = String(data.requestId || "");
 
-        try {
-          const payload =
-            await handleBridgeAction(
-              String(data.action || ""),
-              data.payload || {}
-            );
+      try {
+        const payload = await handleBridgeAction(
+          String(data.action || ""),
+          data.payload || {}
+        );
 
-          event.source.postMessage(
-            {
-              type:
-                "FUMENI_DEVICE_BRIDGE_RESULT",
-
-              requestId,
-
-              success: true,
-
-              payload
-            },
-            event.origin || "*"
-          );
-        } catch (error) {
-          event.source.postMessage(
-            {
-              type:
-                "FUMENI_DEVICE_BRIDGE_RESULT",
-
-              requestId,
-
-              success: false,
-
-              error:
-                String(
-                  error?.message ||
-                  error
-                )
-            },
-            event.origin || "*"
-          );
-        }
+        event.source.postMessage(
+          {
+            type: "FUMENI_DEVICE_BRIDGE_RESULT",
+            requestId,
+            success: true,
+            payload
+          },
+          GAS_ORIGIN
+        );
+      } catch (error) {
+        event.source.postMessage(
+          {
+            type: "FUMENI_DEVICE_BRIDGE_RESULT",
+            requestId,
+            success: false,
+            error: String(error?.message || error)
+          },
+          GAS_ORIGIN
+        );
       }
-    );
+    });
 
-    iframe.addEventListener(
-      "load",
-      () => {
-        try {
-          iframe.contentWindow.postMessage(
-            {
-              type:
-                "FUMENI_DEVICE_BRIDGE_READY"
-            },
-            "*"
-          );
-        } catch (e) {
-          console.warn(
-            "Bridge ready message failed",
-            e
-          );
-        }
+    iframe.addEventListener("load", () => {
+      try {
+        iframe.contentWindow.postMessage(
+          {
+            type: "FUMENI_DEVICE_BRIDGE_READY"
+          },
+          GAS_ORIGIN
+        );
+      } catch (error) {
+        console.warn("Bridge ready message failed", error);
       }
-    );
+    });
   })();
   </script>
 
-  <!-- =========================
-       SERVICE WORKER
-       ========================= -->
-
   <script>
     if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-      .register("./sw.js")
-      .catch(() => {});
-  }
+      navigator.serviceWorker
+        .register("./sw.js")
+        .catch(() => {});
+    }
   </script>
-
 </body>
-
 </html>
