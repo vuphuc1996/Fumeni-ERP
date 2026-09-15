@@ -32,22 +32,37 @@ const isIOS=/iPad|iPhone|iPod/i.test(navigator.userAgent);
 const isAndroid=/Android/i.test(navigator.userAgent);
 const isMobile=navigator.userAgentData?.mobile===true||isIOS||isAndroid||/BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)||window.matchMedia('(max-width:768px)').matches;
 const deviceMode=isMobile?'mobile':'desktop';
-const gasUrl=`${GAS_URL}?device=${deviceMode}&v=3.9.5`;
-// Google Apps Script is itself a sandboxed application. Nesting that application
-// inside a GitHub iframe causes its internal postMessage/warden channel to see
-// github.io as the parent origin and can drop messages. On mobile we therefore
-// navigate top-level to GAS; this preserves the real Apps Script runtime and
-// device APIs. Desktop keeps the previous iframe shell.
-if(isMobile){ window.location.replace(gasUrl); return; }
-iframe.src=gasUrl; launching.style.display='none';
-let deferredPrompt=null;
+const APP_VERSION="3.9.7";
+const gasUrl=`${GAS_URL}?device=${deviceMode}&v=${APP_VERSION}`;
 const standalone=window.matchMedia('(display-mode:standalone)').matches||navigator.standalone===true;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(!isMobile&&!standalone)pwaBanner.style.display='grid';installBtn.style.display='block'});
-window.addEventListener('load',()=>{if(!isMobile&&!standalone&&isIOS){pwaBanner.style.display='grid';iosHelp.style.display='block'}});
+
+// Mobile: require Home Screen/standalone launch before entering Apps Script.
+// This avoids nested iframe runtime issues and gives Safari/Android a stable app shell.
+if(isMobile){
+  launching.style.display='none';
+  if(!standalone){
+    pwaBanner.style.display='grid';
+    if(isIOS){
+      iosHelp.style.display='block';
+      installBtn.style.display='none';
+    }else{
+      installBtn.style.display='block';
+    }
+  }else{
+    window.location.replace(gasUrl);
+    return;
+  }
+}else{
+  iframe.src=gasUrl;
+  launching.style.display='none';
+}
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(isMobile && !standalone){ pwaBanner.style.display='grid'; installBtn.style.display='block'; } else if(!isMobile&&!standalone){ pwaBanner.style.display='grid'; installBtn.style.display='block'; }});
+window.addEventListener('load',()=>{if(isMobile&&!standalone&&isIOS){pwaBanner.style.display='grid';iosHelp.style.display='block'}});
 installBtn.addEventListener('click',async()=>{if(!deferredPrompt)return;try{await deferredPrompt.prompt()}catch(e){console.warn('PWA install prompt failed',e)}deferredPrompt=null;pwaBanner.style.display='none'});
 const syncHeight=()=>{const h=window.visualViewport?.height||window.innerHeight;iframe.style.height=`${Math.max(0,h)}px`};
 window.visualViewport?.addEventListener('resize',syncHeight);window.visualViewport?.addEventListener('scroll',syncHeight);window.addEventListener('resize',syncHeight);syncHeight();
 })();
 </script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=3.9.5').catch(error=>console.warn('Service Worker registration failed:',error));}</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=3.9.7').catch(error=>console.warn('Service Worker registration failed:',error));}</script>
 </body></html>
