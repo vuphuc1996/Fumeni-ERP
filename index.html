@@ -1,261 +1,53 @@
 <!doctype html>
-
 <html lang="vi">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f172a">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FumeniERP">
 <link rel="apple-touch-icon" href="./logo.png">
 <link rel="icon" type="image/png" href="./logo.png">
 <link rel="manifest" href="./manifest.json">
 <title>FumeniERP</title>
-
 <style>
-:root{color-scheme:dark}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#0f172a}
-body{position:fixed;inset:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-#app-shell{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;background:#0f172a}
-#app-iframe{display:block;width:100%;height:100%;margin:0;padding:0;border:0;outline:0;background:#0f172a}
-
-@supports(padding:env(safe-area-inset-bottom)){
-#app-shell{padding-bottom:env(safe-area-inset-bottom,0px)}
-#app-iframe{height:calc(100% - env(safe-area-inset-bottom,0px));min-height:calc(100% - env(safe-area-inset-bottom,0px))}
-}
-
-#pwa-banner{
-display:none;position:fixed;inset:0;z-index:10000;place-items:center;
-padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px))
-max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
-background:rgba(15,23,42,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)
-}
-#pwa-card{
-width:min(100%,380px);padding:22px;border:1px solid rgba(255,255,255,.08);
-border-radius:24px;background:#fff;color:#0f172a;box-shadow:0 24px 70px rgba(0,0,0,.35);text-align:center
-}
-#pwa-card img{width:64px;height:64px;object-fit:contain;border-radius:18px;border:1px solid #e2e8f0;padding:6px}
-#pwa-card h3{margin:12px 0 6px;font-size:18px}
-#pwa-card p{margin:0;color:#64748b;font-size:12px;line-height:1.55}
-#ios-help{display:none;margin-top:14px;padding:12px;border-radius:16px;background:#eff6ff;color:#1e3a8a;text-align:left;font-size:11px;line-height:1.5}
-#install-btn{
-display:none;width:100%;margin-top:16px;min-height:46px;border:0;border-radius:14px;
-background:#16a34a;color:#fff;font-weight:700;cursor:pointer
-}
+:root{color-scheme:dark}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#0f172a}body{position:fixed;inset:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}#app-shell{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;background:#0f172a}#app-iframe{display:block;width:100%;height:100%;border:0;background:#0f172a}#launching{position:fixed;inset:0;display:grid;place-items:center;background:#0f172a;color:#fff;z-index:100;font-size:13px}#pwa-banner{display:none;position:fixed;inset:0;z-index:10000;place-items:center;padding:16px;background:rgba(15,23,42,.94);backdrop-filter:blur(12px)}#pwa-card{width:min(100%,380px);padding:22px;border:1px solid rgba(255,255,255,.08);border-radius:24px;background:#fff;color:#0f172a;box-shadow:0 24px 70px rgba(0,0,0,.35);text-align:center}#pwa-card img{width:64px;height:64px;object-fit:contain;border-radius:18px;border:1px solid #e2e8f0;padding:6px}#pwa-card h3{margin:12px 0 6px;font-size:18px}#pwa-card p{margin:0;color:#64748b;font-size:12px;line-height:1.55}#ios-help{display:none;margin-top:14px;padding:12px;border-radius:16px;background:#eff6ff;color:#1e3a8a;text-align:left;font-size:11px;line-height:1.5}#install-btn{display:none;width:100%;margin-top:16px;min-height:46px;border:0;border-radius:14px;background:#16a34a;color:#fff;font-weight:700;cursor:pointer}
 </style>
-
 </head>
-
 <body>
-
-<div id="pwa-banner">
-  <div id="pwa-card">
-    <img src="./logo.png" alt="FumeniERP">
-    <h3>Cài FumeniERP</h3>
-    <p>Thêm ứng dụng vào màn hình chính để mở nhanh và ổn định hơn trên điện thoại.</p>
-    <div id="ios-help"><b>iPhone/iPad:</b> mở menu <b>Chia sẻ</b> của Safari → <b>Thêm vào Màn hình chính</b> → <b>Thêm</b>.</div>
-    <button id="install-btn" type="button">Cài đặt App</button>
-  </div>
-</div>
-
-<main id="app-shell" aria-label="FumeniERP">
-  <iframe
-    id="app-iframe"
-    title="FumeniERP"
-    allow="camera *; microphone *; geolocation *; publickey-credentials-get *; publickey-credentials-create *"
-    sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-downloads"
-    referrerpolicy="strict-origin-when-cross-origin"></iframe>
-</main>
-
+<div id="launching">Đang mở FumeniERP…</div>
+<div id="pwa-banner"><div id="pwa-card"><img src="./logo.png" alt="FumeniERP"><h3>Cài FumeniERP</h3><p>Thêm ứng dụng vào màn hình chính để mở nhanh và ổn định hơn trên điện thoại.</p><div id="ios-help"><b>iPhone/iPad:</b> mở menu <b>Chia sẻ</b> của Safari → <b>Thêm vào Màn hình chính</b> → <b>Thêm</b>.</div><button id="install-btn" type="button">Cài đặt App</button></div></div>
+<main id="app-shell" aria-label="FumeniERP"><iframe id="app-iframe" title="FumeniERP" allow="camera *; microphone *; geolocation *; publickey-credentials-get *; publickey-credentials-create *" sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-downloads" referrerpolicy="strict-origin-when-cross-origin"></iframe></main>
 <script>
-(() => {
+(()=>{
 const GAS_URL="https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
-const ALLOWED_GAS_ORIGINS=new Set(["https://script.google.com","https://script.googleusercontent.com"]);
-const iframe=document.getElementById("app-iframe");
-const pwaBanner=document.getElementById("pwa-banner");
-const iosHelp=document.getElementById("ios-help");
-const installBtn=document.getElementById("install-btn");
-
+const iframe=document.getElementById('app-iframe');
+const launching=document.getElementById('launching');
+const pwaBanner=document.getElementById('pwa-banner');
+const iosHelp=document.getElementById('ios-help');
+const installBtn=document.getElementById('install-btn');
 const isIOS=/iPad|iPhone|iPod/i.test(navigator.userAgent);
 const isAndroid=/Android/i.test(navigator.userAgent);
-const isMobile=navigator.userAgentData?.mobile===true||isIOS||isAndroid||/BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)||window.matchMedia("(max-width:768px)").matches;
-const deviceMode=isMobile?"mobile":"desktop";
-
-iframe.src=`${GAS_URL}?device=${deviceMode}`;
-
+const isMobile=navigator.userAgentData?.mobile===true||isIOS||isAndroid||/BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)||window.matchMedia('(max-width:768px)').matches;
+const deviceMode=isMobile?'mobile':'desktop';
+const gasUrl=`${GAS_URL}?device=${deviceMode}&v=3.9.5`;
+// Google Apps Script is itself a sandboxed application. Nesting that application
+// inside a GitHub iframe causes its internal postMessage/warden channel to see
+// github.io as the parent origin and can drop messages. On mobile we therefore
+// navigate top-level to GAS; this preserves the real Apps Script runtime and
+// device APIs. Desktop keeps the previous iframe shell.
+if(isMobile){ window.location.replace(gasUrl); return; }
+iframe.src=gasUrl; launching.style.display='none';
 let deferredPrompt=null;
-const standalone=window.matchMedia("(display-mode:standalone)").matches||navigator.standalone===true;
-
-window.addEventListener("beforeinstallprompt",e=>{
-  e.preventDefault();
-  deferredPrompt=e;
-  if(isMobile&&!standalone)pwaBanner.style.display="grid";
-  if(!isIOS)installBtn.style.display="block";
-});
-
-window.addEventListener("load",()=>{
-  if(isMobile&&!standalone&&isIOS){
-    pwaBanner.style.display="grid";
-    iosHelp.style.display="block";
-  }
-});
-
-installBtn.addEventListener("click",async()=>{
-  if(!deferredPrompt)return;
-  try{await deferredPrompt.prompt()}catch(e){console.warn("PWA install prompt failed",e)}
-  deferredPrompt=null;
-  pwaBanner.style.display="none";
-});
-
-const syncHeight=()=>{
-  const h=window.visualViewport?.height||window.innerHeight;
-  iframe.style.height=`${Math.max(0,h)}px`;
-};
-
-if(window.visualViewport){
-  window.visualViewport.addEventListener("resize",syncHeight);
-  window.visualViewport.addEventListener("scroll",syncHeight);
-}
-window.addEventListener("resize",syncHeight);
-window.addEventListener("orientationchange",()=>setTimeout(syncHeight,250));
-syncHeight();
-
-function b64url(buf){
-  return btoa(String.fromCharCode.apply(null,new Uint8Array(buf))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
-}
-
-function fromB64url(value){
-  const b64=String(value).replace(/-/g,"+").replace(/_/g,"/");
-  const pad=b64.length%4?"=".repeat(4-b64.length%4):"";
-  const raw=atob(b64+pad);
-  const u8=new Uint8Array(raw.length);
-  for(let i=0;i<raw.length;i++)u8[i]=raw.charCodeAt(i);
-  return u8.buffer;
-}
-
-function randomChallenge(){
-  const challenge=new Uint8Array(32);
-  crypto.getRandomValues(challenge);
-  return challenge;
-}
-
-async function handleBridgeAction(action,payload){
-  if(!window.isSecureContext)throw new Error("GitHub Pages phải chạy bằng HTTPS để dùng WebAuthn.");
-  if(!window.PublicKeyCredential)throw new Error("Thiết bị/trình duyệt không hỗ trợ WebAuthn.");
-
-  if(action==="WEBAUTHN_CREATE"){
-    const maNv=String((payload||{}).maNv||"user").trim();
-    const credential=await navigator.credentials.create({
-      publicKey:{
-        challenge:randomChallenge(),
-        rp:{name:"Fumeni ERP"},
-        user:{
-          id:new TextEncoder().encode(maNv),
-          name:maNv,
-          displayName:maNv
-        },
-        pubKeyCredParams:[
-          {type:"public-key",alg:-7},
-          {type:"public-key",alg:-257}
-        ],
-        authenticatorSelection:{
-          authenticatorAttachment:"platform",
-          userVerification:"required"
-        },
-        timeout:60000,
-        attestation:"none"
-      }
-    });
-
-    if(!credential)throw new Error("Không tạo được credential.");
-    return{credentialId:b64url(credential.rawId)};
-  }
-
-  if(action==="WEBAUTHN_GET"){
-    const credentialId=String((payload||{}).credentialId||"").trim();
-    if(!credentialId)throw new Error("Thiếu Credential ID.");
-
-    const assertion=await navigator.credentials.get({
-      publicKey:{
-        challenge:randomChallenge(),
-        allowCredentials:[{
-          id:fromB64url(credentialId),
-          type:"public-key",
-          transports:["internal"]
-        }],
-        userVerification:"required",
-        timeout:60000
-      }
-    });
-
-    return{
-      verified:!!assertion,
-      credentialId:assertion?b64url(assertion.rawId):""
-    };
-  }
-
-  throw new Error("Bridge action không hợp lệ.");
-}
-
-window.addEventListener("message",async event=>{
-  if(event.source!==iframe.contentWindow)return;
-  if(!ALLOWED_GAS_ORIGINS.has(event.origin))return;
-
-  const data=event.data||{};
-  if(data.type!=="FUMENI_DEVICE_BRIDGE_REQUEST")return;
-
-  const requestId=String(data.requestId||"");
-
-  try{
-    const payload=await handleBridgeAction(
-      String(data.action||""),
-      data.payload||{}
-    );
-
-    event.source.postMessage(
-      {
-        type:"FUMENI_DEVICE_BRIDGE_RESULT",
-        requestId,
-        success:true,
-        payload
-      },
-      event.origin
-    );
-  }catch(error){
-    event.source.postMessage(
-      {
-        type:"FUMENI_DEVICE_BRIDGE_RESULT",
-        requestId,
-        success:false,
-        error:String(error?.message||error)
-      },
-      event.origin
-    );
-  }
-});
-
-iframe.addEventListener("load",()=>{
-  try{
-    iframe.contentWindow.postMessage(
-      {type:"FUMENI_DEVICE_BRIDGE_READY"},
-      "https://script.google.com"
-    );
-  }catch(error){
-    console.warn("Bridge ready message failed",error);
-  }
-});
+const standalone=window.matchMedia('(display-mode:standalone)').matches||navigator.standalone===true;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(!isMobile&&!standalone)pwaBanner.style.display='grid';installBtn.style.display='block'});
+window.addEventListener('load',()=>{if(!isMobile&&!standalone&&isIOS){pwaBanner.style.display='grid';iosHelp.style.display='block'}});
+installBtn.addEventListener('click',async()=>{if(!deferredPrompt)return;try{await deferredPrompt.prompt()}catch(e){console.warn('PWA install prompt failed',e)}deferredPrompt=null;pwaBanner.style.display='none'});
+const syncHeight=()=>{const h=window.visualViewport?.height||window.innerHeight;iframe.style.height=`${Math.max(0,h)}px`};
+window.visualViewport?.addEventListener('resize',syncHeight);window.visualViewport?.addEventListener('scroll',syncHeight);window.addEventListener('resize',syncHeight);syncHeight();
 })();
 </script>
-
-<script>
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("./sw.js").catch(error=>{
-    console.warn("Service Worker registration failed:",error);
-  });
-}
-</script>
-
-</body>
-</html>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=3.9.5').catch(error=>console.warn('Service Worker registration failed:',error));}</script>
+</body></html>
