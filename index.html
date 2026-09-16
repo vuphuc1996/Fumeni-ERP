@@ -1,120 +1,186 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FumeniERP</title>
+
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FumeniERP">
-    <link rel="apple-touch-icon" href="./logo.png">
-    <link rel="manifest" href="./manifest.json">
-    <title>FumeniERP</title>
+
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
-        html,
-        body {
-            margin: 0;
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        html, body {
             width: 100%;
             height: 100%;
-            background: #0f172a;
-            color: #fff;
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif
+            height: calc(var(--vh, 1vh) * 100);
+            overflow: hidden;
+            background-color: #0f172a !important;
+            margin: 0;
+            padding: 0;
+            position: fixed;
+            inset: 0;
         }
 
-        body {
-            display: grid;
-            place-items: center
-        }
-
-        .gate {
-            width: min(92vw, 420px);
-            text-align: center
-        }
-
-        .gate img {
-            width: 72px;
-            height: 72px;
-            object-fit: contain;
-            border-radius: 18px;
-            background: #fff;
-            padding: 6px
-        }
-
-        .gate h1 {
-            font-size: 20px;
-            margin: 16px 0 6px
-        }
-
-        .gate p {
-            font-size: 12px;
-            line-height: 1.6;
-            color: #cbd5e1
-        }
-
-        .guide {
-            margin-top: 18px;
-            padding: 16px;
-            border-radius: 18px;
-            background: #fff;
-            color: #0f172a;
-            text-align: left;
-            font-size: 12px;
-            line-height: 1.6
-        }
-
-        .guide b {
-            color: #1d4ed8
-        }
-
-        .btn {
-            display: none;
-            margin-top: 14px;
+        /* Ép iframe tràn viền và cho phép cuộn mượt trên iOS/Android */
+        iframe {
             width: 100%;
-            height: 46px;
-            border: 0;
-            border-radius: 12px;
-            background: #2563eb;
-            color: #fff;
-            font-weight: 800
+            height: 100%;
+            height: 100dvh;
+            border: none;
+            display: block;
+            background-color: #0f172a !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
         }
     </style>
-</head>
-
-<body>
-    <div class="gate"><img src="./logo.png" alt="FumeniERP">
-        <h1>FumeniERP Mobile</h1>
-        <p id="state">Đang kiểm tra chế độ ứng dụng…</p>
-        <div id="guide" class="guide">Để sử dụng FumeniERP như một ứng dụng, hãy chọn <b>Chia sẻ → Thêm vào Màn hình chính</b>, sau đó mở FumeniERP từ biểu tượng trên Màn hình chính.</div><button id="open" class="btn" type="button">Mở FumeniERP</button>
-    </div>
+    <link rel="manifest" href="manifest.json">
     <script>
-        (() => {
-            const GAS = 'https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec';
-            const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || matchMedia('(max-width:768px)').matches;
-            const url = `${GAS}?device=${mobile?'mobile':'desktop'}&v=3.13`;
-            const state = document.getElementById('state'),
-                guide = document.getElementById('guide'),
-                open = document.getElementById('open');
-            if (standalone) {
-                state.textContent = 'Đang mở FumeniERP…';
-                guide.style.display = 'none';
-                location.replace(url);
-                return;
-            }
-            if (!mobile) {
-                guide.style.display = 'none';
-                open.style.display = 'block';
-                open.textContent = 'Mở FumeniERP';
-                open.onclick = () => location.href = url;
-                state.textContent = 'Bạn đang dùng FumeniERP trên trình duyệt máy tính.';
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
+</head>
+<body class="text-slate-800 antialiased select-none">
+
+    <!-- BANNER KHÓA BẮT BUỘC CÀI ĐẶT -->
+    <div id="pwa-install-banner" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-4 max-w-sm w-full mx-auto text-center">
+
+            <div class="flex flex-col items-center gap-2">
+                <img src="https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png" class="w-16 h-16 rounded-2xl shadow-md border border-slate-100 object-contain p-1" alt="Logo">
+                <h3 class="font-bold text-slate-900 text-lg">Yêu cầu cài đặt App</h3>
+                <p class="text-xs text-slate-500">Hệ thống yêu cầu cài đặt ứng dụng ra màn hình chính để tránh lỗi reload trang khi vuốt và tối ưu trải nghiệm mượt mà.</p>
+            </div>
+
+            <!-- HƯỚNG DẪN RIÊNG CHO IPHONE / IPAD -->
+            <div id="ios-instructions" class="hidden bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs text-blue-900 space-y-2 text-left">
+                <p class="font-bold flex items-center gap-1.5 text-blue-700">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i> Hướng dẫn cài trên iPhone:
+                </p>
+                <ol class="list-decimal list-inside space-y-1.5 text-[11px] text-slate-700 font-medium">
+                    <li>Nhấn nút <strong class="text-blue-600">Chia sẻ (Share <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>)</strong> ở thanh dưới Safari.</li>
+                    <li>Cuộn xuống chọn <strong class="text-slate-900">"Thêm vào MH chính"</strong> (Add to Home Screen).</li>
+                    <li>Bấm <strong class="text-slate-900">Thêm</strong>. Sau đó mở App từ icon ngoài màn hình chính để sử dụng.</li>
+                </ol>
+            </div>
+
+            <div class="pt-1">
+                <button id="btn-android-install" onclick="installAndroidApp()" class="hidden w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-emerald-500/30 active:scale-95 transition-all cursor-pointer">
+                    <i class="fa-solid fa-download mr-1.5"></i> Cài đặt App ngay
+                </button>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 text-center">
+                <p class="text-[10px] text-slate-400 font-medium">
+                    &copy; 2026 FumeniERP • Phát triển bởi Vũ Nguyễn Hoàng Phúc
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG CHỨA APP GAS -->
+    <iframe id="app-iframe"
+        src="LINK_GOOGLE_APPS_SCRIPT_CUA_BAN"
+        allow="camera *; microphone *; geolocation *; publickey-credentials-get *; publickey-credentials-create *"
+        sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-downloads"
+        scrolling="yes"
+        style="width: 100%; height: 100vh; border: none;">
+    </iframe>
+
+    <script>
+    // Tự động khôi phục URL Google Apps Script
+    (function() {
+        const _domain = "moc.elgoog.tpircs//:sptth".split("").reverse().join(""); 
+        const _path = "/macros/s/";
+        const _id = "AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q";
+        const _exec = "/exec";
+
+        const iframe = document.getElementById('app-iframe');
+        if (iframe) {
+            iframe.src = _domain + _path + _id + _exec;
+        }
+    })();
+
+    let deferredPrompt;
+    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isMobileUA = /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    function isPhoneDevice() {
+        if (!isMobileUA && window.innerWidth >= 900) return false;
+        return window.innerWidth < 768 || (isIOS && !/iPad/.test(navigator.userAgent));
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    window.addEventListener('load', () => {
+        if (!isStandalone && isPhoneDevice()) {
+            document.getElementById('pwa-install-banner').classList.remove('hidden');
+
+            if (isIOS) {
+                document.getElementById('ios-instructions').classList.remove('hidden');
+                document.getElementById('btn-android-install').classList.add('hidden');
             } else {
-                state.textContent = 'Chưa chạy ở chế độ ứng dụng.';
-                open.style.display = 'none';
+                document.getElementById('btn-android-install').classList.remove('hidden');
             }
-        })();
+        }
+    });
+
+    function installAndroidApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    document.getElementById('pwa-install-banner').classList.add('hidden');
+                }
+                deferredPrompt = null;
+            });
+        } else {
+            alert("Vui lòng bấm vào dấu 3 chấm (⋮) ở góc trên bên phải Chrome -> Chọn 'Thêm vào màn hình chính' (Add to Home screen).");
+        }
+    }
+
+    // Tối ưu hóa chiều cao iframe khi bàn phím ảo hoặc thanh công cụ hiển thị
+    function setAppHeight() {
+        const iframe = document.getElementById('app-iframe');
+        if (!iframe) return;
+        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const winH = window.innerHeight;
+        const diff = winH - vh;
+        // Chỉ thu nhỏ khi bàn phím ảo thực sự mở (chênh lệch lớn), bỏ qua sai số nhỏ do ẩn/hiện thanh địa chỉ
+        iframe.style.height = (diff > 100 ? vh : winH) + 'px';
+    }
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setAppHeight);
+    } else {
+        window.addEventListener('resize', setAppHeight);
+    }
+    window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 300));
+    setAppHeight();
+
+    function setVhVar() {
+    document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+    }
+    setVhVar();
+    window.addEventListener('resize', setVhVar);
+    window.addEventListener('orientationchange', () => setTimeout(setVhVar, 300));
     </script>
 </body>
-
 </html>
