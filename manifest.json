@@ -7,7 +7,7 @@
   "background_color":"#0f172a",
   "theme_color":"#0f172a",
   "icons":[{
-    "src":"./logo.png",
+    "src":"https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png",
     "sizes":"180x180",
     "type":"image/png",
     "purpose":"any maskable"
