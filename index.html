@@ -10,154 +10,110 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FumeniERP">
     <link rel="apple-touch-icon" href="./logo.png">
-    <link rel="icon" type="image/png" href="./logo.png">
     <link rel="manifest" href="./manifest.json">
     <title>FumeniERP</title>
     <style>
         html,
         body {
+            margin: 0;
             width: 100%;
             height: 100%;
-            margin: 0;
             background: #0f172a;
+            color: #fff;
             font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif
         }
 
         body {
-            min-height: 100dvh;
             display: grid;
             place-items: center
         }
 
-        #shell {
-            width: 100%;
-            min-height: 100dvh;
-            display: grid;
-            place-items: center;
-            padding: 20px;
-            box-sizing: border-box
+        .gate {
+            width: min(92vw, 420px);
+            text-align: center
         }
 
-        #card {
-            width: min(100%, 420px);
-            background: #fff;
-            border-radius: 28px;
-            padding: 24px;
-            box-sizing: border-box;
-            text-align: center;
-            box-shadow: 0 24px 70px rgba(0, 0, 0, .35);
-            color: #0f172a
-        }
-
-        #card img {
-            width: 68px;
-            height: 68px;
+        .gate img {
+            width: 72px;
+            height: 72px;
             object-fit: contain;
             border-radius: 18px;
-            border: 1px solid #e2e8f0;
-            padding: 7px
+            background: #fff;
+            padding: 6px
         }
 
-        #card h1 {
+        .gate h1 {
             font-size: 20px;
-            margin: 14px 0 8px
+            margin: 16px 0 6px
         }
 
-        #card p {
-            font-size: 13px;
-            line-height: 1.6;
-            color: #64748b;
-            margin: 0
-        }
-
-        #ios-help,
-        #android-help {
-            display: none;
-            margin-top: 16px;
-            padding: 14px;
-            border-radius: 16px;
+        .gate p {
             font-size: 12px;
             line-height: 1.6;
-            text-align: left
+            color: #cbd5e1
         }
 
-        #ios-help {
-            background: #eff6ff;
-            color: #1e3a8a
+        .guide {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 18px;
+            background: #fff;
+            color: #0f172a;
+            text-align: left;
+            font-size: 12px;
+            line-height: 1.6
         }
 
-        #android-help {
-            background: #f0fdf4;
-            color: #166534
+        .guide b {
+            color: #1d4ed8
         }
 
-        #install-btn {
+        .btn {
             display: none;
+            margin-top: 14px;
             width: 100%;
-            height: 48px;
-            margin-top: 16px;
+            height: 46px;
             border: 0;
-            border-radius: 14px;
-            background: #16a34a;
-            color: white;
-            font-weight: 800;
-            font-size: 14px
+            border-radius: 12px;
+            background: #2563eb;
+            color: #fff;
+            font-weight: 800
         }
     </style>
 </head>
 
 <body>
-    <div id="shell">
-        <div id="card"><img src="./logo.png" alt="FumeniERP">
-            <h1>FumeniERP</h1>
-            <p id="message">Đang chuẩn bị ứng dụng…</p>
-            <div id="ios-help"><b>iPhone/iPad:</b> Safari → Chia sẻ → Thêm vào Màn hình chính → Thêm. Sau đó mở FumeniERP từ biểu tượng trên Màn hình chính.</div>
-            <div id="android-help"><b>Android:</b> chọn Thêm vào màn hình chính hoặc Cài đặt ứng dụng, sau đó mở FumeniERP từ màn hình chính.</div><button id="install-btn" type="button">Cài đặt FumeniERP</button>
-        </div>
+    <div class="gate"><img src="./logo.png" alt="FumeniERP">
+        <h1>FumeniERP Mobile</h1>
+        <p id="state">Đang kiểm tra chế độ ứng dụng…</p>
+        <div id="guide" class="guide">Để sử dụng FumeniERP như một ứng dụng, hãy chọn <b>Chia sẻ → Thêm vào Màn hình chính</b>, sau đó mở FumeniERP từ biểu tượng trên Màn hình chính.</div><button id="open" class="btn" type="button">Mở FumeniERP</button>
     </div>
     <script>
         (() => {
-            const GAS_URL = "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
-            const V = "3.12";
-            const ios = /iPad|iPhone|iPod/i.test(navigator.userAgent);
-            const android = /Android/i.test(navigator.userAgent);
-            const mobile = ios || android || navigator.userAgentData?.mobile === true || matchMedia('(max-width:768px)').matches;
-            const standalone = matchMedia('(display-mode:standalone)').matches || navigator.standalone === true;
-            const msg = document.getElementById('message'),
-                iosHelp = document.getElementById('ios-help'),
-                androidHelp = document.getElementById('android-help'),
-                btn = document.getElementById('install-btn');
-            const go = m => location.replace(`${GAS_URL}?device=${m}&v=${V}`);
-            if (!mobile) {
-                go('desktop');
-                return;
-            }
+            const GAS = 'https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec';
+            const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || matchMedia('(max-width:768px)').matches;
+            const url = `${GAS}?device=${mobile?'mobile':'desktop'}&v=3.13`;
+            const state = document.getElementById('state'),
+                guide = document.getElementById('guide'),
+                open = document.getElementById('open');
             if (standalone) {
-                go('mobile');
+                state.textContent = 'Đang mở FumeniERP…';
+                guide.style.display = 'none';
+                location.replace(url);
                 return;
             }
-            msg.textContent = 'Để sử dụng FumeniERP như một ứng dụng, hãy thêm ứng dụng vào Màn hình chính.';
-            if (ios) iosHelp.style.display = 'block';
-            if (android) androidHelp.style.display = 'block';
-            let prompt = null;
-            addEventListener('beforeinstallprompt', e => {
-                e.preventDefault();
-                prompt = e;
-                btn.style.display = 'block'
-            });
-            btn.addEventListener('click', async () => {
-                if (!prompt) return;
-                try {
-                    await prompt.prompt();
-                    await prompt.userChoice
-                } catch (_) {}
-                prompt = null;
-                btn.style.display = 'none'
-            });
+            if (!mobile) {
+                guide.style.display = 'none';
+                open.style.display = 'block';
+                open.textContent = 'Mở FumeniERP';
+                open.onclick = () => location.href = url;
+                state.textContent = 'Bạn đang dùng FumeniERP trên trình duyệt máy tính.';
+            } else {
+                state.textContent = 'Chưa chạy ở chế độ ứng dụng.';
+                open.style.display = 'none';
+            }
         })();
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?v=3.12').catch(() => {});
     </script>
 </body>
 
