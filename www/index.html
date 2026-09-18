@@ -1,8 +1,107 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Fumeni ERP</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.json">
+  <title>FumeniERP</title>
+  <style>
+    :root{background:#0b1220;color:#f8fafc;color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#0b1220}body{display:grid;place-items:center;overflow:hidden}
+    .wrap{width:min(420px,calc(100% - 32px));text-align:center}.logo{width:76px;height:76px;border-radius:24px;display:grid;place-items:center;margin:0 auto 18px;font-size:34px;font-weight:900;background:linear-gradient(135deg,#4ade80,#16a34a);box-shadow:0 12px 40px #0006}.title{font-weight:800;font-size:24px}.sub{margin-top:8px;color:#94a3b8;font-size:13px;line-height:1.5}.status{margin-top:24px;padding:12px 14px;border:1px solid #ffffff12;border-radius:16px;background:#111b2e;color:#cbd5e1;font-size:12px}.btn{display:none;margin-top:12px;width:100%;border:0;border-radius:14px;padding:13px;font-weight:800;background:#22c55e;color:#06120a}.help{margin-top:12px;color:#64748b;font-size:11px;line-height:1.5}
+    .modal{position:fixed;inset:0;background:#0009;display:none;align-items:end;justify-content:center;padding:18px}.modal.on{display:flex}.card{width:min(520px,100%);background:#111b2e;border:1px solid #ffffff12;border-radius:24px;padding:20px 18px 24px}.card h2{font-size:17px;margin:0 0 8px}.card p{color:#cbd5e1;font-size:13px;line-height:1.6;margin:8px 0 0}.close{margin-top:16px;width:100%;padding:13px;border:0;border-radius:14px;background:#172238;color:#fff;font-weight:700}
+  </style>
 </head>
-<body></body>
+<body>
+  <main class="wrap">
+    <div class="logo">F</div>
+    <div class="title">FumeniERP</div>
+    <div class="sub">App shell / GitHub bridge<br>Đang mở giao diện hệ thống…</div>
+    <div id="status" class="status">Đang xác định thiết bị</div>
+    <button id="install" class="btn">Cài đặt FumeniERP</button>
+    <div class="help">GAS vẫn là nơi xử lý xác thực, session, quyền và dữ liệu.</div>
+  </main>
+
+  <div id="ios-modal" class="modal">
+    <div class="card">
+      <h2>Dùng FumeniERP như app trên iPhone/iPad</h2>
+      <p>Mở trang bằng Safari → Share → Add to Home Screen → bật “Open as Web App” → Add.</p>
+      <button id="ios-close" class="close">Đã hiểu</button>
+    </div>
+  </div>
+
+<script>
+  'use strict';
+  const GAS_URL = 'PASTE_GAS_WEB_APP_URL_HERE';
+  const statusEl = document.getElementById('status');
+  const installBtn = document.getElementById('install');
+  const iosModal = document.getElementById('ios-modal');
+  let deferredPrompt = null;
+
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const isTouch = navigator.maxTouchPoints > 0;
+  const isTablet = isTouch && Math.min(window.innerWidth, window.screen.width || window.innerWidth) >= 760;
+  const isMobile = isAndroid || isIOS || (isTouch && window.innerWidth < 760);
+
+  function gasUrl(device) {
+    if (!GAS_URL || GAS_URL.indexOf('PASTE_GAS') === 0) {
+      return null;
+    }
+    const sep = GAS_URL.indexOf('?') >= 0 ? '&' : '?';
+    return GAS_URL + sep + 'device=' + encodeURIComponent(device) + '&shell=github';
+  }
+
+  function openApp() {
+    const device = isMobile || isTablet ? 'mobile' : 'desktop';
+    const url = gasUrl(device);
+    if (!url) {
+      statusEl.textContent = 'Chưa cấu hình GAS_URL trong Github/www/index.html';
+      installBtn.style.display = 'none';
+      return;
+    }
+    statusEl.textContent = 'Đã xác định ' + device + '. Đang mở FumeniERP…';
+    window.location.replace(url);
+  }
+
+  window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    deferredPrompt = event;
+    installBtn.style.display = 'block';
+    statusEl.textContent = 'Có thể cài FumeniERP như ứng dụng trên Android.';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+    openApp();
+  });
+
+  document.getElementById('ios-close').addEventListener('click', () => {
+    iosModal.classList.remove('on');
+    openApp();
+  });
+
+  if (isIOS && !isStandalone) {
+    iosModal.classList.add('on');
+  } else {
+    setTimeout(openApp, 450);
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
 </html>
