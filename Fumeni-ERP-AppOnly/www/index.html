@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FumeniERP">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="icon" type="image/png" href="./logo.png">
+  <link rel="apple-touch-icon" href="./logo.png">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./styles.css">
+  <title>FumeniERP</title>
+</head>
+<body>
+  <main id="app" aria-live="polite">
+    <section class="card">
+      <img class="logo" src="./logo.png" alt="FumeniERP">
+      <h1 class="title">FumeniERP</h1>
+      <p class="subtitle" id="subtitle">Ứng dụng quản trị doanh nghiệp</p>
+      <div class="status" id="status">Đang kiểm tra chế độ ứng dụng…</div>
+
+      <div class="install" id="iosInstall">
+        <strong>iPhone / iPad</strong><br>
+        Mở liên kết bằng Safari, chọn <strong>Thêm vào Màn hình chính</strong> và bật <strong>Open as Web App</strong>. Sau khi mở từ biểu tượng FumeniERP, giao diện sẽ chạy ở chế độ ứng dụng độc lập.
+      </div>
+
+      <div class="install" id="androidInstall">
+        <strong>Android</strong><br>
+        Chọn <strong>Cài đặt ứng dụng</strong> khi trình duyệt hiển thị lời mời cài đặt. Sau khi cài, mở FumeniERP từ biểu tượng ứng dụng.
+      </div>
+
+      <button class="install-button" id="installButton" type="button">Cài đặt FumeniERP</button>
+      <div class="footer">FumeniERP App Shell · 4.0.0</div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const GAS_URL = 'https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec';
+      const VERSION = '4.0.0-app-only';
+      const subtitle = document.getElementById('subtitle');
+      const status = document.getElementById('status');
+      const iosInstall = document.getElementById('iosInstall');
+      const androidInstall = document.getElementById('androidInstall');
+      const installButton = document.getElementById('installButton');
+      let deferredPrompt = null;
+
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isAndroid = /Android/i.test(ua);
+      const isMobile = isIOS || isAndroid || /Mobile|Tablet/i.test(ua) || window.matchMedia('(max-width: 900px)').matches;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true;
+      const isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+
+      document.documentElement.dataset.platform = isIOS ? 'ios' : isAndroid ? 'android' : isMobile ? 'mobile' : 'desktop';
+
+      // App-only policy: no desktop web fallback.
+      if (!isMobile && !isNative) {
+        subtitle.textContent = 'Ứng dụng này chỉ được vận hành ở chế độ app mobile/tablet.';
+        status.textContent = 'Hãy mở bằng ứng dụng FumeniERP hoặc cài FumeniERP lên thiết bị di động.';
+        return;
+      }
+
+      // Native Capacitor: GAS opens inside the native WebView, so there is no Safari/Chrome UI.
+      if (isNative) {
+        status.textContent = 'Đang mở FumeniERP…';
+        const target = `${GAS_URL}?device=mobile&app=native&v=${encodeURIComponent(VERSION)}`;
+        window.location.replace(target);
+        return;
+      }
+
+      // Standalone PWA shell: keep the app-looking entry point. Normal Safari/Chrome UI cannot
+      // be removed by webpage code; it disappears only after the site is launched as an app.
+      if (isStandalone) {
+        status.textContent = 'FumeniERP đã ở chế độ ứng dụng. Nếu ứng dụng chưa mở, hãy khởi chạy lại từ biểu tượng FumeniERP.';
+        return;
+      }
+
+      status.textContent = 'Thiết bị chưa ở chế độ ứng dụng. Hãy cài FumeniERP để dùng toàn màn hình.';
+      if (isIOS) iosInstall.style.display = 'block';
+      if (isAndroid) androidInstall.style.display = 'block';
+
+      window.addEventListener('beforeinstallprompt', event => {
+        event.preventDefault();
+        deferredPrompt = event;
+        installButton.style.display = 'block';
+      });
+
+      installButton.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        try {
+          await deferredPrompt.prompt();
+          await deferredPrompt.userChoice;
+        } finally {
+          deferredPrompt = null;
+          installButton.style.display = 'none';
+        }
+      });
+
+      // Suppress page-level zoom/gesture controls where the browser allows it.
+      document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
+      document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
+      document.addEventListener('gestureend', e => e.preventDefault(), { passive: false });
+      document.addEventListener('touchmove', e => {
+        if (e.touches && e.touches.length > 1) e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('wheel', e => {
+        if (e.ctrlKey) e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('keydown', e => {
+        if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) e.preventDefault();
+      });
+      document.addEventListener('contextmenu', e => e.preventDefault());
+      document.addEventListener('dragstart', e => e.preventDefault());
+      document.addEventListener('selectstart', e => e.preventDefault());
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
