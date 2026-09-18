@@ -61,91 +61,98 @@
   </div>
 
   <script>
-    // Bước 1: Đăng ký Face ID (Chỉ làm 1 lần trên thiết bị)
-    async function dangKyFaceID() {
-      const statusEl = document.getElementById('status');
-      statusEl.innerHTML = "🔒 Đang kích hoạt đăng ký Face ID...";
-      statusEl.style.color = "#0056b3";
+  // Bước 1: Đăng ký Face ID (Tối ưu hóa tham số cho Safari iOS)
+  async function dangKyFaceID() {
+    const statusEl = document.getElementById('status');
+    statusEl.innerHTML = "🔒 Đang kích hoạt đăng ký Face ID...";
+    statusEl.style.color = "#0056b3";
 
-      try {
-        const challenge = new Uint8Array(32);
-        window.crypto.getRandomValues(challenge);
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
 
-        // Chuyển ID người dùng sang dạng Uint8Array chuẩn để tránh TypeError trên Safari
-        const userId = Uint8Array.from("FumeniUser01", c => c.charCodeAt(0));
+      // Tạo mảng byte chuẩn cho user ID
+      const userId = new Uint8Array([70, 117, 109, 101, 110, 105, 83, 101, 99, 117, 114, 101]);
 
-        const credential = await navigator.credentials.create({
-          publicKey: {
-            challenge: challenge,
-            rp: { name: "Fumeni ERP" }, // Để trống id để trình duyệt tự nhận diện domain GitHub Pages
-            user: { 
-              id: userId, 
-              name: "nhanvien@fumeni", 
-              displayName: "Nhân viên Fumeni" 
-            },
-            pubKeyCredParams: [
-              { type: "publickey", alg: -7 },   // ES256
-              { type: "publickey", alg: -257 }  // RS256
-            ],
-            authenticatorSelection: { 
-              authenticatorAttachment: "platform", // Bắt buộc dùng Face ID/Touch ID sẵn có trên máy
-              residentKey: "required",             // Safari yêu cầu bắt buộc tham số này để không báo TypeError
-              userVerification: "required" 
-            },
-            timeout: 60000,
-            attestation: "none"
-          }
-        });
-
-        if (credential) {
-          statusEl.innerHTML = "✅ Đăng ký thành công! Bạn có thể bấm Chấm công.";
-          statusEl.style.color = "green";
-        }
-      } catch (err) {
-        console.error("Lỗi đăng ký:", err);
-        statusEl.innerHTML = "❌ Đăng ký thất bại: " + (err.message || err);
-        statusEl.style.color = "red";
-      }
-    }
-
-    // Bước 2: Chấm công bằng Face ID đã đăng ký
-    async function thucHienChamCong() {
-      const statusEl = document.getElementById('status');
-      statusEl.innerHTML = "🔒 Đang gọi Face ID...";
-      statusEl.style.color = "#0056b3";
-
-      try {
-        const challenge = new Uint8Array(32);
-        window.crypto.getRandomValues(challenge);
-
-        const credential = await navigator.credentials.get({
-          publicKey: {
-            challenge: challenge,
-            timeout: 60000,
+      const options = {
+        publicKey: {
+          challenge: challenge,
+          rp: { 
+            name: "Fumeni ERP",
+            id: window.location.hostname // Gán đúng domain GitHub Pages
+          },
+          user: { 
+            id: userId, 
+            name: "nhanvien@fumeni.local", 
+            displayName: "Nhân viên Fumeni" 
+          },
+          // Chỉ giữ lại thuật toán ES256 (-7) mà Apple Secure Enclave hỗ trợ tốt nhất
+          pubKeyCredParams: [
+            { type: "publickey", alg: -7 }
+          ],
+          authenticatorSelection: { 
+            authenticatorAttachment: "platform", // Bắt buộc dùng Face ID/Touch ID có sẵn
             userVerification: "required"
-          }
-        });
-
-        if (credential) {
-          statusEl.innerHTML = "⏳ Đang gửi dữ liệu lên Google Sheet...";
-
-          // Thay link /exec của Google Apps Script vào đây
-          const gasUrl = "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
-          const timestamp = new Date().getTime();
-          const targetUrl = `${gasUrl}?action=cham_cong&timestamp=${timestamp}`;
-
-          const response = await fetch(targetUrl);
-          const resultText = await response.text();
-
-          statusEl.innerHTML = "✅ " + resultText;
-          statusEl.style.color = "green";
+            // Đã lược bỏ residentKey để tránh lỗi TypeError trên một số phiên bản Safari iOS
+          },
+          timeout: 60000,
+          attestation: "none"
         }
-      } catch (err) {
-        console.error("Lỗi chấm công:", err);
-        statusEl.innerHTML = "❌ Xác thực thất bại hoặc chưa đăng ký Face ID.";
-        statusEl.style.color = "red";
+      };
+
+      const credential = await navigator.credentials.create(options);
+
+      if (credential) {
+        statusEl.innerHTML = "✅ Đăng ký thành công! Bạn có thể bấm Chấm công.";
+        statusEl.style.color = "green";
       }
+    } catch (err) {
+      console.error("Lỗi đăng ký:", err);
+      statusEl.innerHTML = "❌ Đăng ký thất bại: " + (err.message || err);
+      statusEl.style.color = "red";
     }
-  </script>
+  }
+
+  // Bước 2: Chấm công bằng Face ID đã đăng ký
+  async function thucHienChamCong() {
+    const statusEl = document.getElementById('status');
+    statusEl.innerHTML = "🔒 Đang gọi Face ID...";
+    statusEl.style.color = "#0056b3";
+
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+
+      const options = {
+        publicKey: {
+          challenge: challenge,
+          timeout: 60000,
+          userVerification: "required"
+        }
+      };
+
+      const credential = await navigator.credentials.get(options);
+
+      if (credential) {
+        statusEl.innerHTML = "⏳ Đang gửi dữ liệu lên Google Sheet...";
+
+        // Thay link /exec của Google Apps Script vào đây
+        const gasUrl = "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
+        const timestamp = new Date().getTime();
+        const targetUrl = `${gasUrl}?action=cham_cong&timestamp=${timestamp}`;
+
+        const response = await fetch(targetUrl);
+        const resultText = await response.text();
+
+        statusEl.innerHTML = "✅ " + resultText;
+        statusEl.style.color = "green";
+      }
+    } catch (err) {
+      console.error("Lỗi chấm công:", err);
+      statusEl.innerHTML = "❌ Xác thực thất bại hoặc chưa đăng ký Face ID.";
+      statusEl.style.color = "red";
+    }
+  }
+</script>
 </body>
 </html>
