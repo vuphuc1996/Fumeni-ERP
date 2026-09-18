@@ -1,0 +1,17 @@
+{
+  "name": "fumeni-erp",
+  "version": "4.0.4",
+  "private": true,
+  "description": "FumeniERP native app wrapper",
+  "scripts": {
+    "build": "echo 'No web build needed'"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  }
+}
