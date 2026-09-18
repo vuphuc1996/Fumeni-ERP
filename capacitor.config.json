@@ -2,5 +2,7 @@
   "appId": "com.fumeni.erp",
   "appName": "FumeniERP",
   "webDir": "www",
-  "bundledWebRuntime": false
+  "server": {
+    "androidScheme": "https"
+  }
 }

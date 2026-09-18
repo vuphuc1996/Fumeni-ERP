@@ -1,13 +1,14 @@
 {
   "name": "FumeniERP",
   "short_name": "FumeniERP",
+  "id": "./www/",
   "start_url": "./www/",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "description": "FumeniERP application shell",
+  "description": "FumeniERP mobile application",
   "icons": [
     {
       "src": "./logo.png",

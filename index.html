@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FumeniERP">
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" type="image/png" href="../logo.png">
+  <link rel="apple-touch-icon" href="../logo.png">
+  <title>FumeniERP</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+  (function(){
+    const ua=navigator.userAgent||"";
+    const isMobile=/Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua)||Math.min(innerWidth,innerHeight)<=768;
+    if(!isMobile){
+      const gas="https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
+      location.replace(gas + (gas.indexOf('?')>=0?'&':'?') + 'device=desktop');
+    }
+  })();
+  </script>
+  <style>
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; background:#f1f5f9; overscroll-behavior:none; }
+    body { font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; }
+    button,input,select,textarea { font:inherit; }
+    button { touch-action:manipulation; }
+    #app { position:fixed; inset:0; display:flex; flex-direction:column; background:#f1f5f9; padding-top:var(--safe-top); padding-bottom:var(--safe-bottom); }
+    #app-header { flex:0 0 58px; display:flex; align-items:center; justify-content:space-between; padding:0 12px; background:#fff; border-bottom:1px solid #e2e8f0; box-shadow:0 1px 6px rgba(15,23,42,.05); z-index:100; }
+    #app-body { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:12px 12px 78px; }
+    #app-footer { flex:0 0 62px; min-height:62px; background:rgba(255,255,255,.96); border-top:1px solid #e2e8f0; display:grid; grid-template-columns:repeat(5,1fr); align-items:center; z-index:100; backdrop-filter:blur(14px); }
+    .nav-icon { width:100%; height:100%; border:0; background:transparent; color:#94a3b8; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:4px; cursor:pointer; }
+    .nav-icon i { font-size:18px; }
+    .nav-icon.active { color:#2563eb; }
+    .nav-icon.active i { filter:drop-shadow(0 3px 4px rgba(37,99,235,.22)); }
+    .nav-icon span { display:none; }
+    #brand-logo { width:34px; height:34px; border-radius:10px; object-fit:contain; background:#eff6ff; }
+    .module-card { background:#fff; border:1px solid #e2e8f0; border-radius:18px; box-shadow:0 2px 8px rgba(15,23,42,.04); }
+    #module-loading { display:none; }
+    #module-loading.show { display:flex; }
+    #ops-backdrop { position:fixed; inset:0; background:rgba(15,23,42,.42); z-index:300; opacity:0; pointer-events:none; transition:opacity .18s; }
+    #ops-sheet { position:fixed; left:0; right:0; bottom:0; z-index:310; background:#fff; border-radius:26px 26px 0 0; padding:14px 14px calc(18px + var(--safe-bottom)); transform:translateY(110%); transition:transform .2s ease; box-shadow:0 -10px 32px rgba(15,23,42,.16); }
+    #ops-sheet.open { transform:translateY(0); }
+    #ops-backdrop.open { opacity:1; pointer-events:auto; }
+    #user-popup { position:fixed; right:12px; top:calc(66px + var(--safe-top)); width:250px; z-index:400; display:none; }
+    #user-popup.open { display:block; }
+    #loading-overlay { position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,.28); display:none; align-items:center; justify-content:center; backdrop-filter:blur(2px); }
+    #loading-overlay.show { display:flex; }
+    #login-screen { position:fixed; inset:0; z-index:5000; display:flex; align-items:center; justify-content:center; padding:22px; background:linear-gradient(180deg,#0f172a 0%,#172554 100%); }
+    #login-card { width:min(420px,100%); background:#fff; border-radius:28px; padding:24px 20px; box-shadow:0 24px 70px rgba(0,0,0,.24); }
+    .login-input { width:100%; height:48px; border:1px solid #dbe3ef; border-radius:14px; padding:0 14px; outline:none; background:#f8fafc; }
+    .login-input:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); background:#fff; }
+    #mobile-module-host { min-height:100%; }
+    #mobile-module-host > *:first-child { min-height:auto; }
+    /* Make wide View_Board markup breathe on phone without changing its data/functions. */
+    #mobile-module-host .lg\\:col-span-12 { grid-column:span 12/span 12; }
+    #mobile-module-host .text-xl { font-size:1rem; }
+    #mobile-module-host .p-6 { padding:1rem; }
+    #mobile-module-host .gap-4 { gap:.75rem; }
+    #mobile-module-host .rounded-3xl { border-radius:1rem; }
+    @media (min-width: 769px) {
+      #app { display:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="bridge-holder" style="position:fixed;left:-2px;top:-2px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none" aria-hidden="true">
+    <iframe id="gas-bridge" title="FumeniERP service bridge" style="width:1px;height:1px;border:0" loading="eager"></iframe>
+  </div>
+
+  <div id="login-screen">
+    <div id="login-card">
+      <div class="text-center">
+        <img src="../logo.png" alt="FumeniERP" class="w-16 h-16 mx-auto rounded-2xl object-contain bg-blue-50 p-2">
+        <div class="mt-4 text-xl font-extrabold text-slate-900">FumeniERP</div>
+        <div class="mt-1 text-xs text-slate-500">Đăng nhập ứng dụng</div>
+      </div>
+      <form id="login-form" class="mt-6 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1.5">ID hệ thống</label>
+          <input id="login-system" class="login-input" autocomplete="organization" placeholder="Nhập Name hệ thống">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1.5">Tài khoản</label>
+          <input id="login-user" class="login-input" autocomplete="username" placeholder="Tài khoản">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1.5">Mật khẩu</label>
+          <input id="login-pass" type="password" class="login-input" autocomplete="current-password" placeholder="Mật khẩu">
+        </div>
+        <label class="flex items-center gap-2 text-xs text-slate-500 px-1">
+          <input id="login-remember" type="checkbox" class="rounded border-slate-300">
+          Ghi nhớ đăng nhập trên thiết bị
+        </label>
+        <button id="login-submit" type="submit" class="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow-lg shadow-blue-500/20">
+          <i class="fa-solid fa-right-to-bracket mr-2"></i>Đăng nhập
+        </button>
+      </form>
+      <div id="login-message" class="hidden mt-4 rounded-2xl bg-rose-50 border border-rose-100 px-3 py-2 text-xs text-rose-700"></div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <header id="app-header">
+      <div class="flex items-center min-w-0">
+        <img id="brand-logo" src="../logo.png" alt="FumeniERP">
+        <div class="ml-2 min-w-0">
+          <div class="text-sm font-extrabold text-slate-900 tracking-wide">FUMENI ERP</div>
+        </div>
+      </div>
+      <button id="user-button" type="button" class="flex items-center gap-2 border-0 bg-transparent rounded-2xl px-1 py-1" aria-haspopup="menu" aria-expanded="false">
+        <span id="user-avatar" class="w-8 h-8 rounded-full bg-blue-600 text-white text-[11px] font-extrabold flex items-center justify-center">A</span>
+        <span id="header-user-name" class="max-w-[130px] truncate text-xs font-bold text-slate-700">Nhân viên</span>
+        <i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>
+      </button>
+    </header>
+
+    <main id="app-body">
+      <div id="module-loading" class="show min-h-[55vh] items-center justify-center text-slate-400 text-sm">
+        <div class="text-center">
+          <i class="fa-solid fa-circle-notch fa-spin text-2xl text-blue-500"></i>
+          <div class="mt-2 font-semibold">Đang tải ứng dụng...</div>
+        </div>
+      </div>
+      <div id="mobile-module-host"></div>
+      <section id="attendance-view" class="hidden space-y-3">
+        <div class="module-card p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-extrabold text-slate-900">Chấm công</div>
+              <div id="attendance-clock" class="text-xs text-slate-400 mt-1">--:--:--</div>
+            </div>
+            <i class="fa-solid fa-location-dot text-xl text-blue-600"></i>
+          </div>
+          <div id="attendance-status" class="mt-4 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-xs text-slate-600">Đang xác định vị trí...</div>
+          <button id="attendance-button" type="button" class="mt-3 w-full h-12 rounded-2xl bg-blue-600 text-white font-extrabold">
+            <i class="fa-solid fa-fingerprint mr-2"></i>Ghi nhận chấm công
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer id="app-footer">
+      <button type="button" class="nav-icon active" data-tab="home" title="Trang chủ"><i class="fa-solid fa-house"></i><span>Trang chủ</span></button>
+      <button type="button" class="nav-icon" id="nav-operations" title="Thao tác"><i class="fa-solid fa-table-cells"></i><span>Thao tác</span></button>
+      <button type="button" class="nav-icon" data-tab="attendance" title="Chấm công"><i class="fa-solid fa-fingerprint"></i><span>Chấm công</span></button>
+      <button type="button" class="nav-icon" data-tab="documents" title="Văn bản"><i class="fa-solid fa-file-signature"></i><span>Văn bản</span></button>
+      <button type="button" class="nav-icon" data-tab="info" title="Thông tin"><i class="fa-solid fa-circle-user"></i><span>Thông tin</span></button>
+    </footer>
+  </div>
+
+  <div id="user-popup" class="bg-white border border-slate-200 rounded-3xl shadow-2xl p-3">
+    <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
+      <span id="popup-avatar" class="w-11 h-11 rounded-full bg-blue-600 text-white text-sm font-extrabold flex items-center justify-center">A</span>
+      <div class="min-w-0">
+        <div id="popup-name" class="font-extrabold text-sm text-slate-900 truncate">Nhân viên</div>
+        <div id="popup-role" class="text-[10px] text-blue-600 font-semibold truncate">--</div>
+        <div id="popup-emp" class="text-[10px] text-slate-400 truncate">--</div>
+      </div>
+    </div>
+    <button id="logout-button" type="button" class="mt-3 w-full h-10 rounded-2xl bg-rose-50 text-rose-700 border border-rose-100 font-extrabold text-xs">
+      <i class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất
+    </button>
+  </div>
+
+  <div id="ops-backdrop"></div>
+  <section id="ops-sheet">
+    <div class="w-10 h-1 rounded-full bg-slate-300 mx-auto mb-4"></div>
+    <div class="px-1 mb-3">
+      <div class="text-base font-extrabold text-slate-900">Thao tác</div>
+      <div class="text-xs text-slate-400">Các module được cấp quyền</div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <button type="button" class="module-action-card module-card p-4 text-left" data-module="View_CRM">
+        <i class="fa-solid fa-users text-xl text-blue-600"></i><div class="mt-2 text-sm font-extrabold text-slate-900">CRM</div><div class="text-[10px] text-slate-400">Khách hàng & cơ hội</div>
+      </button>
+      <button type="button" class="module-action-card module-card p-4 text-left" data-module="View_DMS">
+        <i class="fa-solid fa-boxes-stacked text-xl text-indigo-600"></i><div class="mt-2 text-sm font-extrabold text-slate-900">DMS</div><div class="text-[10px] text-slate-400">Điểm bán & đơn hàng</div>
+      </button>
+    </div>
+    <button id="close-ops" type="button" class="mt-3 w-full h-11 rounded-2xl bg-slate-100 text-slate-700 font-bold text-xs">Đóng</button>
+  </section>
+
+  <div id="loading-overlay">
+    <div class="bg-white rounded-3xl shadow-2xl px-6 py-5 text-center">
+      <i class="fa-solid fa-circle-notch fa-spin text-2xl text-blue-600"></i>
+      <div id="loading-text" class="mt-2 text-xs font-bold text-slate-600">Đang xử lý...</div>
+    </div>
+  </div>
+
+<script>
+(function() {
+  'use strict';
+
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
+  const BRIDGE_URL = GAS_URL + (GAS_URL.indexOf('?') >= 0 ? '&' : '?') + 'bridge=1';
+  const APP_BASE = new URL('./', location.href);
+  let bridgeReady = false;
+  let requestSeq = 0;
+  const pending = new Map();
+  let sessionToken = '';
+  let currentUserData = {};
+  let activeTab = 'home';
+  const moduleCache = new Map();
+  const moduleInitMap = {
+    View_Board: 'initBoardView',
+    View_CRM: 'initCRMView',
+    View_DMS: 'initDMSView',
+    View_Office: 'initOfficeView',
+    View_Info: 'initViewInfo'
+  };
+  const autoRefresh = {
+    timer:null,
+    start(fn,ms){ this.stop(); this.timer=setInterval(fn,ms || 600000); },
+    stop(){ if(this.timer){ clearInterval(this.timer); this.timer=null; } }
+  };
+
+  // ===== Common globals expected by the existing GAS View_* scripts =====
+  window.currentUserData = currentUserData;
+  window.__FUMENI_BOOTSTRAP__ = { preload: {} };
+  window.getSessionToken = () => sessionToken;
+  window.isMobileDevice = () => true;
+  window.escapeHTML = (str) => String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  window.sanitizeBoardHtml = (html) => {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = String(html ?? '');
+    wrapper.querySelectorAll('script,style,iframe,object,embed,form').forEach(n => n.remove());
+    wrapper.querySelectorAll('*').forEach(el => {
+      [...el.attributes].forEach(a => {
+        if (/^on/i.test(a.name)) el.removeAttribute(a.name);
+        if ((a.name === 'href' || a.name === 'src') && /^\s*javascript:/i.test(a.value)) el.removeAttribute(a.name);
+      });
+    });
+    return wrapper.innerHTML;
+  };
+  window.BOARD_ITEMS_PER_PAGE = 10;
+  window.currentBoardPostsAll = [];
+  window.currentPageBoard = 1;
+  window.currentCategoryFilter = 'Tất cả';
+  window.filteredBoardPosts = [];
+  window.TIME_RESET = 600000;
+  window.AutoRefreshManager = autoRefresh;
+  const showLoading = (show, message='Đang xử lý...') => {
+    const el = document.getElementById('loading-overlay');
+    const text = document.getElementById('loading-text');
+    if (text) text.textContent = message;
+    if (el) el.classList.toggle('show', !!show);
+  };
+  const showSuccess = (title='Thành công!', text='', timer=1500) => window.Swal ? Swal.fire({icon:'success',title,text,timer,showConfirmButton:false}) : null;
+  const showError = (title='Lỗi', text='', timer=1800) => window.Swal ? Swal.fire({icon:'error',title,text,timer,showConfirmButton:false}) : null;
+  const showWarning = (title='Cảnh báo', text='', timer=1800) => window.Swal ? Swal.fire({icon:'warning',title,text,timer,showConfirmButton:false}) : null;
+  window.showLoading = showLoading; window.showSuccess=showSuccess; window.showError=showError; window.showWarning=showWarning;
+
+  function deviceId() {
+    try {
+      let id = localStorage.getItem('fumeni_device_id');
+      if (!id) { id = 'web-' + crypto.randomUUID(); localStorage.setItem('fumeni_device_id', id); }
+      return id;
+    } catch(e) { return 'web-' + Date.now(); }
+  }
+
+  function callGas(method, args) {
+    return new Promise((resolve,reject) => {
+      const requestId = 'r' + Date.now() + '-' + (++requestSeq);
+      pending.set(requestId, {resolve,reject});
+      const frame = document.getElementById('gas-bridge');
+      if (!frame || !frame.contentWindow) {
+        pending.delete(requestId);
+        reject(new Error('Không tìm thấy GAS bridge.'));
+        return;
+      }
+      frame.contentWindow.postMessage({
+        type:'FUMENI_GAS_BRIDGE_CALL',
+        requestId,
+        method:String(method),
+        args:Array.isArray(args) ? args : []
+      }, new URL(GAS_URL).origin);
+      setTimeout(() => {
+        const item = pending.get(requestId);
+        if (item) { pending.delete(requestId); item.reject(new Error('Hết thời gian chờ máy chủ.')); }
+      }, 45000);
+    });
+  }
+
+  // Compatibility wrapper for existing Script_*.html files.
+  function createRunner() {
+    let ok = null, fail = null;
+    const runner = new Proxy({}, {
+      get(_target, prop) {
+        if (prop === 'withSuccessHandler') return cb => { ok = cb; return runner; };
+        if (prop === 'withFailureHandler') return cb => { fail = cb; return runner; };
+        return (...args) => {
+          callGas(prop, args).then(v => { if (typeof ok==='function') ok(v); }, e => { if (typeof fail==='function') fail(e); });
+          return runner;
+        };
+      }
+    });
+    return runner;
+  }
+  window.google = { script: { get run() { return createRunner(); } } };
+
+  window.callServerAsync = function(method, ...args) { return callGas(method,args); };
+
+  window.addEventListener('message', event => {
+    if (event.origin !== new URL(GAS_URL).origin) return;
+    const d = event.data || {};
+    if (d.type === 'FUMENI_GAS_BRIDGE_READY') {
+      bridgeReady = true;
+      document.documentElement.dataset.bridgeReady = '1';
+      return;
+    }
+    if (d.type !== 'FUMENI_GAS_BRIDGE_RESPONSE') return;
+    const item = pending.get(d.requestId);
+    if (!item) return;
+    pending.delete(d.requestId);
+    d.ok ? item.resolve(d.result) : item.reject(new Error(d.error || 'Lỗi máy chủ.'));
+  });
+
+  document.getElementById('gas-bridge').src = BRIDGE_URL;
+
+  function loadScriptHtml(source, moduleName) {
+    return new Promise((resolve,reject) => {
+      const blocks = [];
+      const re = new RegExp('<script(?:\\\\s[^>]*)?>([\\\\s\\\\S]*?)<\\\\/script>', 'gi');
+      let m;
+      while ((m = re.exec(String(source || '')))) blocks.push(m[1]);
+      if (!blocks.length) return reject(new Error('Module ' + moduleName + ' không có JavaScript.'));
+      let i = 0;
+      const next = () => {
+        if (i >= blocks.length) return resolve(true);
+        const code = String(blocks[i++] || '').replace(/^\uFEFF/,'').replace(/[\u200B-\u200D\u2060]/g,'');
+        const blobUrl = URL.createObjectURL(new Blob([code], {type:'text/javascript;charset=utf-8'}));
+        const tag = document.createElement('script');
+        tag.dataset.fumeniModule = moduleName;
+        tag.src = blobUrl;
+        tag.onload = () => { URL.revokeObjectURL(blobUrl); next(); };
+        tag.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('Không thể thực thi JS ' + moduleName)); };
+        document.body.appendChild(tag);
+      };
+      next();
+    });
+  }
+
+  async function loadModule(moduleName, force=false) {
+    const name = String(moduleName || 'View_Board');
+    autoRefresh.stop();
+    activeTab = name === 'View_Board' ? 'home' : activeTab;
+    setNavActive(name);
+    document.getElementById('attendance-view').classList.add('hidden');
+    document.getElementById('mobile-module-host').classList.remove('hidden');
+    const loader = document.getElementById('module-loading');
+    const host = document.getElementById('mobile-module-host');
+    if (loader) loader.classList.add('show');
+    host.innerHTML = '';
+    showLoading(true,'Đang tải ' + name.replace(/^View_/,'') + '...');
+    try {
+      let bundle = moduleCache.get(name);
+      if (!bundle || force) {
+        bundle = await callGas('getModuleClientBundle',[name,sessionToken]);
+        if (!bundle || !bundle.success) throw new Error(bundle && (bundle.msg || bundle.message) || 'Không có quyền hoặc không tải được module.');
+        moduleCache.set(name,bundle);
+      }
+      host.innerHTML = bundle.viewHtml || '';
+      if (bundle.scriptHtml) await loadScriptHtml(bundle.scriptHtml,name);
+      const initName = moduleInitMap[name];
+      if (initName && typeof window[initName] === 'function') await Promise.resolve(window[initName]());
+      else if (typeof window.autoInitView === 'function') await Promise.resolve(window.autoInitView(name));
+      host.scrollTop = 0;
+      return true;
+    } catch (err) {
+      host.innerHTML = '<div class="module-card p-6 text-center"><div class="w-12 h-12 mx-auto rounded-full bg-rose-50 text-rose-500 flex items-center justify-center"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="mt-3 font-extrabold text-rose-600">Không thể tải module</div><div class="mt-1 text-xs text-slate-500 break-words">' + window.escapeHTML(err.message || err) + '</div></div>';
+      return false;
+    } finally {
+      if (loader) loader.classList.remove('show');
+      showLoading(false);
+    }
+  }
+  window.loadModuleView = loadModule;
+  window.loadModule = loadModule;
+
+  function setNavActive(name) {
+    const map = {
+      View_Board:'home',
+      attendance:'attendance',
+      View_Office:'documents',
+      View_Info:'info'
+    };
+    const tab = map[name] || (name === 'home' ? 'home' : activeTab);
+    document.querySelectorAll('.nav-icon').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  }
+
+  function openOps() {
+    document.getElementById('ops-backdrop').classList.add('open');
+    document.getElementById('ops-sheet').classList.add('open');
+  }
+  function closeOps() {
+    document.getElementById('ops-backdrop').classList.remove('open');
+    document.getElementById('ops-sheet').classList.remove('open');
+  }
+
+  function updateUser(user) {
+    currentUserData = user || {};
+    window.currentUserData = currentUserData;
+    const name = user.hoTen || user.name || user.user || 'Nhân viên';
+    const role = user.role || '--';
+    const emp = user.maNv || user.idname || '--';
+    const initial = String(name).trim().charAt(0).toUpperCase() || 'A';
+    ['user-avatar','popup-avatar'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.textContent=initial;
+    });
+    document.getElementById('header-user-name').textContent = name;
+    document.getElementById('popup-name').textContent = name;
+    document.getElementById('popup-role').textContent = role;
+    document.getElementById('popup-emp').textContent = emp;
+  }
+
+  function showLoggedIn(user) {
+    updateUser(user);
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('user-popup').classList.remove('open');
+    setNavActive('View_Board');
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    const system = document.getElementById('login-system').value.trim();
+    const username = document.getElementById('login-user').value.trim();
+    const password = document.getElementById('login-pass').value;
+    const remember = document.getElementById('login-remember').checked;
+    const msg = document.getElementById('login-message');
+    msg.classList.add('hidden');
+    if (!system || !username || !password) {
+      msg.textContent='Vui lòng nhập đủ ID hệ thống, tài khoản và mật khẩu.';
+      msg.classList.remove('hidden');
+      return;
+    }
+    document.getElementById('login-submit').disabled = true;
+    showLoading(true,'Đang xác thực...');
+    try {
+      const res = await callGas('checkLogin',[username,password,deviceId(),' ',system,remember,'View_Board']);
+      if (!res || !res.success) throw new Error(res?.msg || 'Đăng nhập không thành công.');
+      sessionToken = String(res.sessionToken || '');
+      if (!sessionToken) throw new Error('Máy chủ không trả về session token.');
+      sessionStorage.setItem('crm_session_token',sessionToken);
+      if (res.rememberToken) localStorage.setItem('crm_session_token_legacy',sessionToken);
+      updateUser(res);
+      showLoggedIn(res);
+      await loadModule('View_Board');
+    } catch(err) {
+      msg.textContent = err.message || String(err);
+      msg.classList.remove('hidden');
+    } finally {
+      document.getElementById('login-submit').disabled = false;
+      showLoading(false);
+    }
+  }
+
+  async function restoreSession() {
+    sessionToken = sessionStorage.getItem('crm_session_token') || localStorage.getItem('crm_session_token_legacy') || '';
+    if (!sessionToken) return false;
+    showLoading(true,'Đang khôi phục phiên...');
+    try {
+      const res = await callGas('getCurrentUser',[sessionToken]);
+      if (!res || !res.success || !res.user) throw new Error('Phiên đăng nhập không còn hợp lệ.');
+      updateUser(res.user);
+      showLoggedIn(res.user);
+      await loadModule('View_Board');
+      return true;
+    } catch(e) {
+      sessionToken='';
+      sessionStorage.removeItem('crm_session_token');
+      localStorage.removeItem('crm_session_token_legacy');
+      return false;
+    } finally { showLoading(false); }
+  }
+
+  async function logout() {
+    const ok = await Swal.fire({
+      icon:'question', title:'Đăng xuất?', text:'Bạn muốn kết thúc phiên làm việc này?',
+      showCancelButton:true, confirmButtonText:'Đăng xuất', cancelButtonText:'Hủy'
+    });
+    if (!ok.isConfirmed) return;
+    try { await callGas('logoutUser',[]); } catch(e) {}
+    autoRefresh.stop();
+    sessionToken='';
+    sessionStorage.removeItem('crm_session_token');
+    localStorage.removeItem('crm_session_token_legacy');
+    moduleCache.clear();
+    document.getElementById('app').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('login-pass').value='';
+  }
+
+  async function openAttendance() {
+    activeTab='attendance';
+    setNavActive('attendance');
+    closeOps();
+    document.getElementById('mobile-module-host').classList.add('hidden');
+    document.getElementById('attendance-view').classList.remove('hidden');
+    const status = document.getElementById('attendance-status');
+    status.textContent='Đang xác định vị trí...';
+    if (!navigator.geolocation) { status.textContent='Thiết bị không hỗ trợ GPS.'; return; }
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const lat=pos.coords.latitude, lng=pos.coords.longitude;
+      try {
+        const policy=await callGas('getCheckinPolicy',[sessionToken]);
+        const valid=await callGas('validateCheckinLocation',[currentUserData.maNv || currentUserData.idname || '',lat,lng,sessionToken]);
+        status.textContent = valid?.allowed ? 'Vị trí hợp lệ — có thể chấm công.' : (valid?.msg || 'Ngoài phạm vi.');
+        document.getElementById('attendance-button').disabled = !(valid?.allowed);
+      } catch(e) {
+        status.textContent=e.message || 'Không thể kiểm tra vị trí.';
+      }
+    }, err => {
+      status.textContent='Không lấy được vị trí: ' + (err.message || 'GPS bị từ chối.');
+    }, {enableHighAccuracy:true,timeout:15000,maximumAge:10000});
+  }
+
+  async function submitAttendance() {
+    const status = document.getElementById('attendance-status');
+    if (!navigator.geolocation) return;
+    showLoading(true,'Đang ghi nhận chấm công...');
+    navigator.geolocation.getCurrentPosition(async pos => {
+      try {
+        const res=await callGas('saveCheckinToSheet',[{sessionToken,gps:pos.coords.latitude + ',' + pos.coords.longitude,deviceId:deviceId(),timestamp:new Date().toISOString()}]);
+        if (!res?.success) throw new Error(res?.msg || 'Không ghi nhận được.');
+        await showSuccess('Đã ghi nhận','Chấm công thành công.');
+        status.textContent='Đã ghi nhận: ' + new Date().toLocaleString('vi-VN');
+      } catch(e) {
+        await showError('Chấm công thất bại',e.message || 'Lỗi máy chủ.');
+      } finally { showLoading(false); }
+    }, err => { showLoading(false); showError('Không lấy được GPS',err.message || ''); }, {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+  }
+
+  function bindEvents() {
+    document.getElementById('login-form').addEventListener('submit',doLogin);
+    document.getElementById('user-button').addEventListener('click',e => {
+      e.stopPropagation();
+      document.getElementById('user-popup').classList.toggle('open');
+    });
+    document.getElementById('logout-button').addEventListener('click',logout);
+    document.addEventListener('click',e => {
+      if (!e.target.closest('#user-popup') && !e.target.closest('#user-button')) document.getElementById('user-popup').classList.remove('open');
+    });
+    document.getElementById('nav-operations').addEventListener('click',openOps);
+    document.getElementById('close-ops').addEventListener('click',closeOps);
+    document.getElementById('ops-backdrop').addEventListener('click',closeOps);
+    document.querySelectorAll('.module-action-card').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        closeOps();
+        await loadModule(btn.dataset.module);
+      });
+    });
+    document.querySelectorAll('.nav-icon[data-tab]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const tab=btn.dataset.tab;
+        if(tab==='home') await loadModule('View_Board');
+        else if(tab==='attendance') await openAttendance();
+        else if(tab==='documents') await loadModule('View_Office');
+        else if(tab==='info') await loadModule('View_Info');
+      });
+    });
+    document.getElementById('attendance-button').addEventListener('click',submitAttendance);
+  }
+
+  setInterval(() => {
+    const el=document.getElementById('attendance-clock');
+    if(el) el.textContent=new Date().toLocaleTimeString('vi-VN');
+  },1000);
+
+  document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
+  document.addEventListener('gesturechange',e=>e.preventDefault(),{passive:false});
+  document.addEventListener('gestureend',e=>e.preventDefault(),{passive:false});
+  let lastTouchEnd=0;
+  document.addEventListener('touchend',e=>{ const now=Date.now(); if(now-lastTouchEnd<=300) e.preventDefault(); lastTouchEnd=now; },{passive:false});
+  document.addEventListener('wheel',e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});
+
+  bindEvents();
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('../sw.js', {scope:'../'}).catch(()=>{});
+    });
+  }
+  window.addEventListener('load', async () => {
+    document.getElementById('gas-bridge').src = BRIDGE_URL;
+    try { await restoreSession(); } catch(e) {}
+  });
+})();
+</script>
+</body>
+</html>
