@@ -2,16 +2,5 @@
   "appId": "com.fumeni.erp",
   "appName": "FumeniERP",
   "webDir": "www",
-  "bundledWebRuntime": false,
-  "server": {
-    "url": "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec?device=mobile",
-    "cleartext": false
-  },
-  "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 1200,
-      "backgroundColor": "#0f172a",
-      "showSpinner": false
-    }
-  }
+  "bundledWebRuntime": false
 }
