@@ -21,7 +21,7 @@
   <script>
     async function testXacThuc() {
       if (!window.PublicKeyCredential) {
-        alert("Trình duyệt không hỗ trợ WebAuthn!");
+        alert("Trình duyệt của bạn không hỗ trợ WebAuthn!");
         return;
       }
 
@@ -29,29 +29,29 @@
         const challenge = new Uint8Array(32);
         window.crypto.getRandomValues(challenge);
 
-        // Gọi pop-up sinh trắc học thiết bị
-        const credential = await navigator.credentials.create({
+        // Dùng navigator.credentials.get() để XÁC THỰC nhanh bằng Face ID / Vân tay
+        const credential = await navigator.credentials.get({
           publicKey: {
             challenge: challenge,
-            rp: { name: "Test ERP" },
-            user: { id: new Uint8Array(16), name: "tester", displayName: "Tester" },
-            pubKeyCredParams: [{ type: "publickey", alg: -7 }],
             timeout: 60000,
-            authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" }
+            userVerification: "required", // Bắt buộc quét sinh trắc học
+            rpId: window.location.hostname  // Khớp tên miền hiện tại của GitHub Pages
           }
         });
 
         if (credential) {
-          // Gửi thông điệp xác thực vào Iframe GAS
+          // Xác thực thành công -> Gửi tín hiệu vào iframe GAS
           const iframe = document.getElementById('appGasFrame');
-          iframe.contentWindow.postMessage({
-            action: 'CHAM_CONG_APPROVED',
-            timestamp: new Date().getTime()
-          }, '*');
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+              action: 'CHAM_CONG_APPROVED',
+              timestamp: new Date().getTime()
+            }, '*');
+          }
         }
       } catch (err) {
-        console.error(err);
-        alert("Xác thực thất bại hoặc người dùng đã hủy.");
+        console.error("Lỗi WebAuthn:", err);
+        alert("Xác thực thất bại hoặc bạn đã hủy thao tác. (Chi tiết: " + err.message + ")");
       }
     }
   </script>
