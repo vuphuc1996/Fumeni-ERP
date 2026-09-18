@@ -2,37 +2,43 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fumeni ERP - Chấm công Sinh trắc học</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fumeni ERP - Chấm công</title>
+  
+  <!-- Cấu hình hiển thị như App thật trên màn hình chính iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fumeni ERP">
+
   <style>
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
       text-align: center; 
-      padding: 30px; 
+      padding: 40px 20px; 
       background: #f4f6f9; 
       margin: 0;
     }
     .card { 
       background: white; 
       padding: 30px 20px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+      border-radius: 16px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
       max-width: 400px; 
       margin: auto; 
     }
     h2 { color: #0056b3; margin-top: 0; }
-    p { color: #666; font-size: 14px; margin-bottom: 25px; }
+    p { color: #666; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
     .btn { 
       background: #0056b3; 
       color: white; 
       border: none; 
-      padding: 14px 24px; 
+      padding: 16px 24px; 
       font-size: 16px; 
       font-weight: bold; 
-      border-radius: 8px; 
+      border-radius: 12px; 
       cursor: pointer; 
       width: 100%; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(0,86,179,0.3);
     }
     .btn:active { background: #004085; }
     #status { margin-top: 20px; font-weight: bold; font-size: 15px; }
@@ -42,47 +48,75 @@
 
   <div class="card">
     <h2>Fumeni ERP</h2>
-    <p>Xác thực danh tính bằng sinh trắc học hoặc mã PIN thiết bị để chấm công.</p>
+    <p>Sử dụng Face ID hoặc Touch ID trên thiết bị để xác thực và chấm công.</p>
     
-    <button class="btn" onclick="chamCongAnToan()">🔒 Xác nhận Chấm công</button>
+    <button class="btn" onclick="thucHienChamCong()">🔒 Quét Face ID Chấm công</button>
     
     <div id="status"></div>
   </div>
 
   <script>
-    async function chamCongAnToan() {
+    async function thucHienChamCong() {
       const statusEl = document.getElementById('status');
-      statusEl.innerHTML = "🔒 Đang yêu cầu xác thực thiết bị...";
+      statusEl.innerHTML = "🔒 Đang kích hoạt Face ID...";
       statusEl.style.color = "#0056b3";
 
+      if (!window.PublicKeyCredential) {
+        alert("Trình duyệt không hỗ trợ WebAuthn!");
+        return;
+      }
+
       try {
-        // 1. Gọi hộp thoại Face ID / Vân tay / Passcode gốc của thiết bị di động
-        const result = await NativeBiometric.verify({
-          reason: "Xác thực danh tính để chấm công Fumeni ERP",
-          title: "Chấm công nhân viên",
-          subtitle: "Sử dụng Face ID, Vân tay hoặc Mật khẩu thiết bị",
-          negativeButtonText: "Hủy"
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        // 1. Gọi xác thực sinh trắc học chuẩn WebAuthn trên Safari (iOS)
+        const credential = await navigator.credentials.get({
+          publicKey: {
+            challenge: challenge,
+            timeout: 60000,
+            userVerification: "required",
+            rpId: window.location.hostname
+          }
+        }).catch(async () => {
+          // Nếu lần đầu chưa có Passkey trên máy, tự động tạo mới (Register)
+          return await navigator.credentials.create({
+            publicKey: {
+              challenge: challenge,
+              rp: { name: "Fumeni ERP", id: window.location.hostname },
+              user: { 
+                id: new Uint8Array(16), 
+                name: "nhanvien@fumeni", 
+                displayName: "Nhân viên Fumeni" 
+              },
+              pubKeyCredParams: [{ type: "publickey", alg: -7 }],
+              timeout: 60000,
+              authenticatorSelection: { 
+                authenticatorAttachment: "platform", 
+                userVerification: "required" 
+              }
+            }
+          });
         });
 
-        if (result.verified) {
-          statusEl.innerHTML = "⏳ Đang gửi dữ liệu về Google Sheet...";
+        if (credential) {
+          statusEl.innerHTML = "⏳ Xác thực thành công! Đang lưu vào hệ thống...";
 
-          // 2. Thay link /exec của Google Apps Script vào đây
+          // 2. Thay đường dẫn Web App /exec của Google Apps Script vào đây
           const gasUrl = "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
           const timestamp = new Date().getTime();
           const targetUrl = `${gasUrl}?action=cham_cong&timestamp=${timestamp}`;
 
-          // 3. Gửi yêu cầu bằng Fetch API
+          // 3. Gửi dữ liệu bằng Fetch API
           const response = await fetch(targetUrl);
           const resultText = await response.text();
 
-          // 4. Hiển thị thông báo thành công
           statusEl.innerHTML = "✅ " + resultText;
           statusEl.style.color = "green";
         }
-      } catch (error) {
-        console.error("Lỗi xác thực:", error);
-        statusEl.innerHTML = "❌ Xác thực thất bại hoặc người dùng đã hủy.";
+      } catch (err) {
+        console.error("Lỗi:", err);
+        statusEl.innerHTML = "❌ Xác thực thất bại hoặc đã hủy.";
         statusEl.style.color = "red";
       }
     }
