@@ -1,21 +1,19 @@
 {
-  "name": "Fumeni ERP System",
-  "short_name": "Fumeni",
-  "start_url": "./www/index.html",
+  "name": "FumeniERP",
+  "short_name": "FumeniERP",
+  "start_url": "./www/",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f6f9",
-  "theme_color": "#0056b3",
-  "description": "Hệ thống quản trị nội bộ Fumeni",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "FumeniERP application shell",
   "icons": [
     {
-      "src": "logo.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "./logo.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
