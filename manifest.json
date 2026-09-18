@@ -1,8 +1,21 @@
 {
-  "name": "Fumeni ERP",
+  "name": "Fumeni ERP System",
   "short_name": "Fumeni",
-  "start_url": "www/index.html",
-  "display": "standalone", 
+  "start_url": "./www/index.html",
+  "display": "standalone",
   "background_color": "#f4f6f9",
-  "theme_color": "#0056b3"
+  "theme_color": "#0056b3",
+  "description": "Hệ thống quản trị nội bộ Fumeni",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
