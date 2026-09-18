@@ -1,131 +1,203 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="theme-color" content="#0f172a">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <!-- Bắt buộc: Chống zoom, tối ưu cho mobile app -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
+  <!-- Cấu hình để biến thành App (ẩn thanh URL trình duyệt) -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="FumeniERP">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="format-detection" content="telephone=no">
-  <link rel="icon" type="image/png" href="./logo.png">
-  <link rel="apple-touch-icon" href="./logo.png">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="stylesheet" href="./styles.css">
-  <title>FumeniERP</title>
+  <meta name="theme-color" content="#0056b3">
+  
+  <link rel="manifest" href="../manifest.json">
+  <title>Fumeni ERP</title>
+
+  <style>
+    /* RESET APP-LIKE: Ngăn bôi đen văn bản, chặn highlight màu xanh khi click (đặc trưng web) */
+    * { 
+      box-sizing: border-box; margin: 0; padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent; /* Bỏ viền xanh khi tap trên mobile */
+    }
+    body { 
+      background-color: #f4f6f9; 
+      color: #333;
+      -webkit-user-select: none; /* Chặn bôi đen text ở iOS */
+      user-select: none; /* Chặn bôi đen text chung */
+      overflow: hidden; /* Chống cuộn toàn trang web, chỉ cuộn phần nội dung cần thiết */
+    }
+
+    /* Header thanh trên cùng */
+    .header {
+      background-color: #0056b3; color: white;
+      padding: env(safe-area-inset-top, 15px) 20px 15px; /* Tương thích tai thỏ iPhone */
+      display: flex; align-items: center;
+      position: fixed; width: 100%; top: 0; z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .menu-toggle {
+      background: none; border: none; color: white;
+      font-size: 26px; cursor: pointer; margin-right: 15px;
+      padding: 5px; /* Tăng diện tích chạm để không bị miss click */
+    }
+
+    /* Vùng chứa nội dung chính (App content) */
+    .app-content {
+      margin-top: 60px; /* Chừa chỗ cho header */
+      padding: 20px;
+      height: calc(100vh - 60px);
+      overflow-y: auto; /* Chỉ cho phép cuộn nội dung ở đây */
+    }
+
+    /* Lớp mờ nền khi mở menu */
+    .overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease;
+      z-index: 998;
+    }
+    .overlay.active { opacity: 1; visibility: visible; }
+
+    /* Thanh Menu (Sidebar) */
+    .sidebar {
+      position: fixed; top: 0; left: -280px;
+      width: 280px; height: 100%;
+      background-color: #ffffff;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+      transition: left 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); /* Hiệu ứng trượt mượt của App */
+      z-index: 999;
+      overflow-y: auto;
+    }
+    .sidebar.active { left: 0; }
+    
+    .sidebar-header {
+      padding: calc(env(safe-area-inset-top, 20px) + 20px) 20px 20px;
+      background-color: #f8f9fa; border-bottom: 1px solid #e9ecef;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .sidebar-header h2 { font-size: 18px; color: #0056b3; }
+    .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #666; padding: 5px; }
+
+    /* Accordion Menu */
+    .menu-group { border-bottom: 1px solid #e9ecef; }
+    .accordion-btn {
+      width: 100%; text-align: left; padding: 18px 20px;
+      background: none; border: none; font-size: 16px; font-weight: 500;
+      color: #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    }
+    .accordion-btn:active { background-color: #e2e6ea; } /* Hiệu ứng chạm của app */
+    .accordion-btn.active { color: #0056b3; font-weight: 600; }
+    .arrow { transition: transform 0.3s; font-size: 12px; }
+    .accordion-btn.active .arrow { transform: rotate(180deg); }
+
+    .menu-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background-color: #fafbfc; }
+    .menu-content ul { list-style: none; padding: 0; margin: 0; }
+    .menu-content ul li a {
+      display: block; padding: 15px 20px 15px 40px;
+      color: #555; text-decoration: none; font-size: 15px;
+      border-bottom: 1px solid #f1f1f1;
+    }
+    .menu-content ul li a:active { background-color: #eef2f5; }
+  </style>
 </head>
 <body>
-  <main id="app" aria-live="polite">
-    <section class="card">
-      <img class="logo" src="./logo.png" alt="FumeniERP">
-      <h1 class="title">FumeniERP</h1>
-      <p class="subtitle" id="subtitle">Ứng dụng quản trị doanh nghiệp</p>
-      <div class="status" id="status">Đang kiểm tra chế độ ứng dụng…</div>
 
-      <div class="install" id="iosInstall">
-        <strong>iPhone / iPad</strong><br>
-        Mở liên kết bằng Safari, chọn <strong>Thêm vào Màn hình chính</strong> và bật <strong>Open as Web App</strong>. Sau khi mở từ biểu tượng FumeniERP, giao diện sẽ chạy ở chế độ ứng dụng độc lập.
+  <header class="header">
+    <button class="menu-toggle" id="openMenu">☰</button>
+    <h1>Fumeni ERP</h1>
+  </header>
+
+  <div class="overlay" id="overlay"></div>
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Danh mục</h2>
+      <button class="close-btn" id="closeMenu">✕</button>
+    </div>
+    <div class="menu-group">
+      <button class="accordion-btn">Quản lý Bán hàng <span class="arrow">▼</span></button>
+      <div class="menu-content">
+        <ul>
+          <li><a href="#" onclick="loadModule('BanHang')">Tạo đơn hàng mới</a></li>
+          <li><a href="#" onclick="loadModule('DanhSach')">Danh sách đơn hàng</a></li>
+        </ul>
       </div>
+    </div>
+  </nav>
 
-      <div class="install" id="androidInstall">
-        <strong>Android</strong><br>
-        Chọn <strong>Cài đặt ứng dụng</strong> khi trình duyệt hiển thị lời mời cài đặt. Sau khi cài, mở FumeniERP từ biểu tượng ứng dụng.
-      </div>
-
-      <button class="install-button" id="installButton" type="button">Cài đặt FumeniERP</button>
-      <div class="footer">FumeniERP App Shell · 4.0.0</div>
-    </section>
+  <!-- Nơi nội dung App sẽ load vào -->
+  <main class="app-content" id="mainContent">
+    <h3>Chào mừng đến với Fumeni ERP</h3>
+    <p>Nhấn vào menu góc trái để bắt đầu.</p>
   </main>
 
+  <!-- Đăng ký Service Worker -->
   <script>
-    (() => {
-      'use strict';
-
-      const GAS_URL = 'https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec';
-      const VERSION = '4.0.0-app-only';
-      const subtitle = document.getElementById('subtitle');
-      const status = document.getElementById('status');
-      const iosInstall = document.getElementById('iosInstall');
-      const androidInstall = document.getElementById('androidInstall');
-      const installButton = document.getElementById('installButton');
-      let deferredPrompt = null;
-
-      const ua = navigator.userAgent || '';
-      const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const isAndroid = /Android/i.test(ua);
-      const isMobile = isIOS || isAndroid || /Mobile|Tablet/i.test(ua) || window.matchMedia('(max-width: 900px)').matches;
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true;
-      const isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
-
-      document.documentElement.dataset.platform = isIOS ? 'ios' : isAndroid ? 'android' : isMobile ? 'mobile' : 'desktop';
-
-      // App-only policy: no desktop web fallback.
-      if (!isMobile && !isNative) {
-        subtitle.textContent = 'Ứng dụng này chỉ được vận hành ở chế độ app mobile/tablet.';
-        status.textContent = 'Hãy mở bằng ứng dụng FumeniERP hoặc cài FumeniERP lên thiết bị di động.';
-        return;
-      }
-
-      // Native Capacitor: GAS opens inside the native WebView, so there is no Safari/Chrome UI.
-      if (isNative) {
-        status.textContent = 'Đang mở FumeniERP…';
-        const target = `${GAS_URL}?device=mobile&app=native&v=${encodeURIComponent(VERSION)}`;
-        window.location.replace(target);
-        return;
-      }
-
-      // Standalone PWA shell: keep the app-looking entry point. Normal Safari/Chrome UI cannot
-      // be removed by webpage code; it disappears only after the site is launched as an app.
-      if (isStandalone) {
-        status.textContent = 'FumeniERP đã ở chế độ ứng dụng. Nếu ứng dụng chưa mở, hãy khởi chạy lại từ biểu tượng FumeniERP.';
-        return;
-      }
-
-      status.textContent = 'Thiết bị chưa ở chế độ ứng dụng. Hãy cài FumeniERP để dùng toàn màn hình.';
-      if (isIOS) iosInstall.style.display = 'block';
-      if (isAndroid) androidInstall.style.display = 'block';
-
-      window.addEventListener('beforeinstallprompt', event => {
-        event.preventDefault();
-        deferredPrompt = event;
-        installButton.style.display = 'block';
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('../sw.js');
       });
+    }
+  </script>
 
-      installButton.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        try {
-          await deferredPrompt.prompt();
-          await deferredPrompt.userChoice;
-        } finally {
-          deferredPrompt = null;
-          installButton.style.display = 'none';
-        }
-      });
+  <!-- Script xử lý Click & UI bọc trong DOMContentLoaded để chống lỗi -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      const openBtn = document.getElementById('openMenu');
+      const closeBtn = document.getElementById('closeMenu');
 
-      // Suppress page-level zoom/gesture controls where the browser allows it.
-      document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
-      document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
-      document.addEventListener('gestureend', e => e.preventDefault(), { passive: false });
-      document.addEventListener('touchmove', e => {
-        if (e.touches && e.touches.length > 1) e.preventDefault();
-      }, { passive: false });
-      document.addEventListener('wheel', e => {
-        if (e.ctrlKey) e.preventDefault();
-      }, { passive: false });
-      document.addEventListener('keydown', e => {
-        if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) e.preventDefault();
-      });
-      document.addEventListener('contextmenu', e => e.preventDefault());
-      document.addEventListener('dragstart', e => e.preventDefault());
-      document.addEventListener('selectstart', e => e.preventDefault());
+      // Tối ưu hàm mở/đóng menu (sử dụng passive event để không block scroll)
+      const toggleMenu = () => {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+      };
 
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+      openBtn.addEventListener('click', toggleMenu);
+      closeBtn.addEventListener('click', toggleMenu);
+      overlay.addEventListener('click', toggleMenu);
+
+      // Xử lý Accordion Menu
+      const accordions = document.querySelectorAll('.accordion-btn');
+      accordions.forEach(acc => {
+        acc.addEventListener('click', function(e) {
+          e.preventDefault(); // Chống nổi bọt sự kiện
+          accordions.forEach(otherAcc => {
+            if (otherAcc !== this && otherAcc.classList.contains('active')) {
+              otherAcc.classList.remove('active');
+              otherAcc.nextElementSibling.style.maxHeight = null;
+            }
+          });
+          this.classList.toggle('active');
+          const content = this.nextElementSibling;
+          if (content.style.maxHeight) {
+            content.style.maxHeight = null;
+          } else {
+            content.style.maxHeight = content.scrollHeight + "px";
+          }
         });
-      }
-    })();
+      });
+    });
+
+    // Hàm giả lập load tính năng khi click vào link con trong menu
+    function loadModule(moduleName) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      
+      // 1. Đóng menu lại khi chọn xong
+      sidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      
+      // 2. Chèn nội dung / Gọi iframe Google Apps Script tại đây
+      const mainContent = document.getElementById('mainContent');
+      mainContent.innerHTML = `<h3>Đang tải dữ liệu module ${moduleName}...</h3>`;
+      
+      // Chèn mã google.script.run của bạn vào đây
+    }
   </script>
 </body>
 </html>
