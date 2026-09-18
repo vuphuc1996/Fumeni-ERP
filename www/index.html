@@ -47,79 +47,95 @@
 <body>
 
   <div class="card">
-    <h2>Fumeni ERP</h2>
-    <p>Sử dụng Face ID hoặc Touch ID trên thiết bị để xác thực và chấm công.</p>
+  <h2>Fumeni ERP</h2>
+  <p>Thiết lập và chấm công bằng Face ID.</p>
+  
+  <!-- Nút đăng ký lần đầu -->
+  <button class="btn" style="background: #28a745; margin-bottom: 10px;" onclick="dangKyFaceID()">1. Đăng ký Face ID với máy</button>
+  
+  <!-- Nút chấm công chính thức -->
+  <button class="btn" onclick="thucHienChamCong()">2. Chấm công bằng Face ID</button>
+  
+  <div id="status"></div>
+</div>
+
+<script>
+  // Bước 1: Đăng ký Face ID lưu vào thiết bị (Chỉ cần làm 1 lần)
+  async function dangKyFaceID() {
+    const statusEl = document.getElementById('status');
+    statusEl.innerHTML = "🔒 Đang đăng ký Face ID với thiết bị...";
     
-    <button class="btn" onclick="thucHienChamCong()">🔒 Quét Face ID Chấm công</button>
-    
-    <div id="status"></div>
-  </div>
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
 
-  <script>
-    async function thucHienChamCong() {
-      const statusEl = document.getElementById('status');
-      statusEl.innerHTML = "🔒 Đang kích hoạt Face ID...";
-      statusEl.style.color = "#0056b3";
-
-      if (!window.PublicKeyCredential) {
-        alert("Trình duyệt không hỗ trợ WebAuthn!");
-        return;
-      }
-
-      try {
-        const challenge = new Uint8Array(32);
-        window.crypto.getRandomValues(challenge);
-
-        // 1. Gọi xác thực sinh trắc học chuẩn WebAuthn trên Safari (iOS)
-        const credential = await navigator.credentials.get({
-          publicKey: {
-            challenge: challenge,
-            timeout: 60000,
-            userVerification: "required",
-            rpId: window.location.hostname
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge: challenge,
+          rp: { name: "Fumeni ERP", id: window.location.hostname },
+          user: { 
+            id: new Uint8Array(16), 
+            name: "nhanvien@fumeni", 
+            displayName: "Nhân viên Fumeni" 
+          },
+          pubKeyCredParams: [{ type: "publickey", alg: -7 }],
+          timeout: 60000,
+          authenticatorSelection: { 
+            authenticatorAttachment: "platform", // Ép buộc dùng sinh trắc học có sẵn trên máy
+            userVerification: "required" 
           }
-        }).catch(async () => {
-          // Nếu lần đầu chưa có Passkey trên máy, tự động tạo mới (Register)
-          return await navigator.credentials.create({
-            publicKey: {
-              challenge: challenge,
-              rp: { name: "Fumeni ERP", id: window.location.hostname },
-              user: { 
-                id: new Uint8Array(16), 
-                name: "nhanvien@fumeni", 
-                displayName: "Nhân viên Fumeni" 
-              },
-              pubKeyCredParams: [{ type: "publickey", alg: -7 }],
-              timeout: 60000,
-              authenticatorSelection: { 
-                authenticatorAttachment: "platform", 
-                userVerification: "required" 
-              }
-            }
-          });
-        });
-
-        if (credential) {
-          statusEl.innerHTML = "⏳ Xác thực thành công! Đang lưu vào hệ thống...";
-
-          // 2. Thay đường dẫn Web App /exec của Google Apps Script vào đây
-          const gasUrl = "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
-          const timestamp = new Date().getTime();
-          const targetUrl = `${gasUrl}?action=cham_cong&timestamp=${timestamp}`;
-
-          // 3. Gửi dữ liệu bằng Fetch API
-          const response = await fetch(targetUrl);
-          const resultText = await response.text();
-
-          statusEl.innerHTML = "✅ " + resultText;
-          statusEl.style.color = "green";
         }
-      } catch (err) {
-        console.error("Lỗi:", err);
-        statusEl.innerHTML = "❌ Xác thực thất bại hoặc đã hủy.";
-        statusEl.style.color = "red";
+      });
+
+      if (credential) {
+        statusEl.innerHTML = "✅ Đăng ký Face ID thành công! Giờ bạn có thể bấm Chấm công.";
+        statusEl.style.color = "green";
       }
+    } catch (err) {
+      console.error(err);
+      statusEl.innerHTML = "❌ Đăng ký thất bại: " + err.message;
+      statusEl.style.color = "red";
     }
-  </script>
+  }
+
+  // Bước 2: Chấm công bằng Face ID đã lưu
+  async function thucHienChamCong() {
+    const statusEl = document.getElementById('status');
+    statusEl.innerHTML = "🔒 Đang gọi Face ID để chấm công...";
+    statusEl.style.color = "#0056b3";
+
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          challenge: challenge,
+          timeout: 60000,
+          userVerification: "required"
+        }
+      });
+
+      if (credential) {
+        statusEl.innerHTML = "⏳ Xác thực thành công! Đang gửi về Google Sheet...";
+
+        // Thay link /exec Google Apps Script của bạn vào đây
+        const gasUrl = "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
+        const timestamp = new Date().getTime();
+        const targetUrl = `${gasUrl}?action=cham_cong&timestamp=${timestamp}`;
+
+        const response = await fetch(targetUrl);
+        const resultText = await response.text();
+
+        statusEl.innerHTML = "✅ " + resultText;
+        statusEl.style.color = "green";
+      }
+    } catch (err) {
+      console.error(err);
+      statusEl.innerHTML = "❌ Xác thực thất bại hoặc chưa đăng ký Face ID.";
+      statusEl.style.color = "red";
+    }
+  }
+</script>
 </body>
 </html>
