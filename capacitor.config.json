@@ -1,7 +1,7 @@
 {
   "appId": "com.fumeni.erp",
   "appName": "Fumeni ERP",
-  "webDir": "www",
+  "webDir": ".",
   "bundledWebRuntime": false,
   "server": {
     "cleartext": true
