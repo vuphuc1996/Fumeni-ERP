@@ -21,6 +21,11 @@
       color-scheme: dark;
       --app-bg: #0f172a;
       --panel-bg: #0b1220;
+      /* Visual viewport variables: only used by the mobile loader. */
+      --vv-top: 0px;
+      --vv-left: 0px;
+      --vv-width: 100vw;
+      --vv-height: 100dvh;
     }
 
     * {
@@ -76,34 +81,57 @@
       opacity: 0;
     }
 
+    /* Mobile only: use the visual viewport so the loader center tracks the
+       same visible area used by the GAS/mobile WebView. Desktop is unchanged. */
+    html.mobile-runtime #loading {
+      inset: var(--vv-top) auto auto var(--vv-left);
+      width: var(--vv-width);
+      height: var(--vv-height);
+    }
+
     .loading-box {
+      position: relative;
       width: 84px;
       height: 84px;
       border-radius: 24px;
-      display: grid;
-      place-items: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: #111c31;
       box-shadow: 0 20px 60px rgba(0,0,0,.35);
     }
 
     .loading-box img {
+      position: relative;
+      z-index: 2;
       width: 48px;
       height: 48px;
       object-fit: contain;
       border-radius: 14px;
+      display: block;
     }
 
     .spinner {
       position: absolute;
+      z-index: 1;
+      left: 50%;
+      top: 50%;
       width: 72px;
       height: 72px;
+      margin: 0;
       border-radius: 50%;
       border: 2px solid rgba(255,255,255,.12);
       border-top-color: rgba(255,255,255,.78);
+      transform: translate(-50%, -50%);
+      transform-origin: center center;
       animation: spin .85s linear infinite;
+      will-change: transform;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to   { transform: translate(-50%, -50%) rotate(360deg); }
+    }
 
     #pwa-install-banner {
       position: fixed;
@@ -266,6 +294,27 @@
       return isMobileOrTablet ? 'mobile' : 'desktop';
     }
 
+    // Add a runtime marker only on mobile/tablet so the desktop loader CSS is
+    // left exactly as-is. The loader then follows the visual viewport rather
+    // than the layout viewport when Safari's bars/safe areas are changing.
+    if (isMobileOrTablet) {
+      document.documentElement.classList.add('mobile-runtime');
+    }
+
+    function updateVisualViewportVars() {
+      if (!isMobileOrTablet) return;
+      const vv = window.visualViewport;
+      const width = vv?.width || document.documentElement.clientWidth || window.innerWidth || 1;
+      const height = vv?.height || window.innerHeight || document.documentElement.clientHeight || 1;
+      const top = vv?.offsetTop || 0;
+      const left = vv?.offsetLeft || 0;
+      const root = document.documentElement;
+      root.style.setProperty('--vv-top', Math.round(top) + 'px');
+      root.style.setProperty('--vv-left', Math.round(left) + 'px');
+      root.style.setProperty('--vv-width', Math.round(width) + 'px');
+      root.style.setProperty('--vv-height', Math.round(height) + 'px');
+    }
+
     function buildGasUrl() {
       const url = new URL(GAS_URL);
       url.searchParams.set('device', getDeviceMode());
@@ -333,8 +382,18 @@
     });
 
     window.addEventListener('resize', setIframeHeight, { passive: true });
-    window.addEventListener('orientationchange', () => setTimeout(setIframeHeight, 250), { passive: true });
-    window.visualViewport?.addEventListener('resize', setIframeHeight, { passive: true });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        updateVisualViewportVars();
+        setIframeHeight();
+      }, 250);
+    }, { passive: true });
+    window.visualViewport?.addEventListener('resize', () => {
+      updateVisualViewportVars();
+      setIframeHeight();
+    }, { passive: true });
+    window.visualViewport?.addEventListener('scroll', updateVisualViewportVars, { passive: true });
+    updateVisualViewportVars();
 
     // Chặn zoom/gesture của shell; không can thiệp UI bên trong GAS iframe.
     document.addEventListener('wheel', event => {
