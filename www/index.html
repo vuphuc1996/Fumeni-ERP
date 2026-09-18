@@ -3,55 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test WebAuthn & GAS</title>
+  <title>Fumeni ERP - Chấm công Sinh trắc học</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f6f9; }
-    .btn { background: #0056b3; color: white; border: none; padding: 14px 28px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
-    iframe { width: 100%; height: 250px; border: 2px dashed #0056b3; border-radius: 8px; background: white; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      text-align: center; 
+      padding: 30px; 
+      background: #f4f6f9; 
+      margin: 0;
+    }
+    .card { 
+      background: white; 
+      padding: 30px 20px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+      max-width: 400px; 
+      margin: auto; 
+    }
+    h2 { color: #0056b3; margin-top: 0; }
+    p { color: #666; font-size: 14px; margin-bottom: 25px; }
+    .btn { 
+      background: #0056b3; 
+      color: white; 
+      border: none; 
+      padding: 14px 24px; 
+      font-size: 16px; 
+      font-weight: bold; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      width: 100%; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .btn:active { background: #004085; }
+    #status { margin-top: 20px; font-weight: bold; font-size: 15px; }
   </style>
 </head>
 <body>
 
-  <h2>Hệ thống Test Xác thực</h2>
-  <button class="btn" onclick="testXacThuc()">🔒 Quét Face ID / Vân tay</button>
-
-  <!-- Dán URL Web App của Google Apps Script vào thuộc tính src dưới đây -->
-  <iframe id="appGasFrame" src="https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec"></iframe>
+  <div class="card">
+    <h2>Fumeni ERP</h2>
+    <p>Xác thực danh tính bằng sinh trắc học hoặc mã PIN thiết bị để chấm công.</p>
+    
+    <button class="btn" onclick="chamCongAnToan()">🔒 Xác nhận Chấm công</button>
+    
+    <div id="status"></div>
+  </div>
 
   <script>
-    async function testXacThuc() {
-      if (!window.PublicKeyCredential) {
-        alert("Trình duyệt của bạn không hỗ trợ WebAuthn!");
-        return;
-      }
+    async function chamCongAnToan() {
+      const statusEl = document.getElementById('status');
+      statusEl.innerHTML = "🔒 Đang yêu cầu xác thực thiết bị...";
+      statusEl.style.color = "#0056b3";
 
       try {
-        const challenge = new Uint8Array(32);
-        window.crypto.getRandomValues(challenge);
-
-        // Dùng navigator.credentials.get() để XÁC THỰC nhanh bằng Face ID / Vân tay
-        const credential = await navigator.credentials.get({
-          publicKey: {
-            challenge: challenge,
-            timeout: 60000,
-            userVerification: "required", // Bắt buộc quét sinh trắc học
-            rpId: window.location.hostname  // Khớp tên miền hiện tại của GitHub Pages
-          }
+        // 1. Gọi hộp thoại Face ID / Vân tay / Passcode gốc của thiết bị di động
+        const result = await NativeBiometric.verify({
+          reason: "Xác thực danh tính để chấm công Fumeni ERP",
+          title: "Chấm công nhân viên",
+          subtitle: "Sử dụng Face ID, Vân tay hoặc Mật khẩu thiết bị",
+          negativeButtonText: "Hủy"
         });
 
-        if (credential) {
-          // Xác thực thành công -> Gửi tín hiệu vào iframe GAS
-          const iframe = document.getElementById('appGasFrame');
-          if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage({
-              action: 'CHAM_CONG_APPROVED',
-              timestamp: new Date().getTime()
-            }, '*');
-          }
+        if (result.verified) {
+          statusEl.innerHTML = "⏳ Đang gửi dữ liệu về Google Sheet...";
+
+          // 2. Thay link /exec của Google Apps Script vào đây
+          const gasUrl = "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec";
+          const timestamp = new Date().getTime();
+          const targetUrl = `${gasUrl}?action=cham_cong&timestamp=${timestamp}`;
+
+          // 3. Gửi yêu cầu bằng Fetch API
+          const response = await fetch(targetUrl);
+          const resultText = await response.text();
+
+          // 4. Hiển thị thông báo thành công
+          statusEl.innerHTML = "✅ " + resultText;
+          statusEl.style.color = "green";
         }
-      } catch (err) {
-        console.error("Lỗi WebAuthn:", err);
-        alert("Xác thực thất bại hoặc bạn đã hủy thao tác. (Chi tiết: " + err.message + ")");
+      } catch (error) {
+        console.error("Lỗi xác thực:", error);
+        statusEl.innerHTML = "❌ Xác thực thất bại hoặc người dùng đã hủy.";
+        statusEl.style.color = "red";
       }
     }
   </script>
