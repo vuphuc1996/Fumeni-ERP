@@ -1,8 +1,8 @@
 {
   "name": "FumeniERP",
   "short_name": "FumeniERP",
-  "id": "./www/",
-  "start_url": "./www/",
+  "id": "./",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
