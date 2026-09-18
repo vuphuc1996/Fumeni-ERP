@@ -1,14 +1,17 @@
 {
   "appId": "com.fumeni.erp",
-  "appName": "FumeniERP",
+  "appName": "Fumeni ERP",
   "webDir": "www",
+  "bundledWebRuntime": false,
   "server": {
-    "url": "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec",
-    "cleartext": false,
-    "allowNavigation": [
-      "script.google.com",
-      "script.googleusercontent.com",
-      "*.googleusercontent.com"
-    ]
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#f4f6f9",
+      "showSpinner": true,
+      "spinnerColor": "#0056b3"
+    }
   }
 }
