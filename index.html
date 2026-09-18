@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0056b3">
   
-  <link rel="manifest" href="../manifest.json">
+  <link rel="manifest" href="manifest.json">
   <title>Fumeni ERP</title>
 
   <style>
@@ -144,7 +144,7 @@
     // Đăng ký Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('../sw.js').catch(console.error);
+        navigator.serviceWorker.register('sw.js').catch(console.error);
       });
     }
 
