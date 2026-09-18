@@ -2,106 +2,130 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#0f172a">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FumeniERP">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="icon" type="image/png" href="./logo.png">
+  <link rel="apple-touch-icon" href="./logo.png">
   <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./styles.css">
   <title>FumeniERP</title>
-  <style>
-    :root{background:#0b1220;color:#f8fafc;color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#0b1220}body{display:grid;place-items:center;overflow:hidden}
-    .wrap{width:min(420px,calc(100% - 32px));text-align:center}.logo{width:76px;height:76px;border-radius:24px;display:grid;place-items:center;margin:0 auto 18px;font-size:34px;font-weight:900;background:linear-gradient(135deg,#4ade80,#16a34a);box-shadow:0 12px 40px #0006}.title{font-weight:800;font-size:24px}.sub{margin-top:8px;color:#94a3b8;font-size:13px;line-height:1.5}.status{margin-top:24px;padding:12px 14px;border:1px solid #ffffff12;border-radius:16px;background:#111b2e;color:#cbd5e1;font-size:12px}.btn{display:none;margin-top:12px;width:100%;border:0;border-radius:14px;padding:13px;font-weight:800;background:#22c55e;color:#06120a}.help{margin-top:12px;color:#64748b;font-size:11px;line-height:1.5}
-    .modal{position:fixed;inset:0;background:#0009;display:none;align-items:end;justify-content:center;padding:18px}.modal.on{display:flex}.card{width:min(520px,100%);background:#111b2e;border:1px solid #ffffff12;border-radius:24px;padding:20px 18px 24px}.card h2{font-size:17px;margin:0 0 8px}.card p{color:#cbd5e1;font-size:13px;line-height:1.6;margin:8px 0 0}.close{margin-top:16px;width:100%;padding:13px;border:0;border-radius:14px;background:#172238;color:#fff;font-weight:700}
-  </style>
 </head>
 <body>
-  <main class="wrap">
-    <div class="logo">F</div>
-    <div class="title">FumeniERP</div>
-    <div class="sub">App shell / GitHub bridge<br>Đang mở giao diện hệ thống…</div>
-    <div id="status" class="status">Đang xác định thiết bị</div>
-    <button id="install" class="btn">Cài đặt FumeniERP</button>
-    <div class="help">GAS vẫn là nơi xử lý xác thực, session, quyền và dữ liệu.</div>
+  <main id="app" aria-live="polite">
+    <section class="card">
+      <img class="logo" src="./logo.png" alt="FumeniERP">
+      <h1 class="title">FumeniERP</h1>
+      <p class="subtitle" id="subtitle">Ứng dụng quản trị doanh nghiệp</p>
+      <div class="status" id="status">Đang kiểm tra chế độ ứng dụng…</div>
+
+      <div class="install" id="iosInstall">
+        <strong>iPhone / iPad</strong><br>
+        Mở liên kết bằng Safari, chọn <strong>Thêm vào Màn hình chính</strong> và bật <strong>Open as Web App</strong>. Sau khi mở từ biểu tượng FumeniERP, giao diện sẽ chạy ở chế độ ứng dụng độc lập.
+      </div>
+
+      <div class="install" id="androidInstall">
+        <strong>Android</strong><br>
+        Chọn <strong>Cài đặt ứng dụng</strong> khi trình duyệt hiển thị lời mời cài đặt. Sau khi cài, mở FumeniERP từ biểu tượng ứng dụng.
+      </div>
+
+      <button class="install-button" id="installButton" type="button">Cài đặt FumeniERP</button>
+      <div class="footer">FumeniERP App Shell · 4.0.0</div>
+    </section>
   </main>
 
-  <div id="ios-modal" class="modal">
-    <div class="card">
-      <h2>Dùng FumeniERP như app trên iPhone/iPad</h2>
-      <p>Mở trang bằng Safari → Share → Add to Home Screen → bật “Open as Web App” → Add.</p>
-      <button id="ios-close" class="close">Đã hiểu</button>
-    </div>
-  </div>
+  <script>
+    (() => {
+      'use strict';
 
-<script>
-  'use strict';
-  const GAS_URL = 'PASTE_GAS_WEB_APP_URL_HERE';
-  const statusEl = document.getElementById('status');
-  const installBtn = document.getElementById('install');
-  const iosModal = document.getElementById('ios-modal');
-  let deferredPrompt = null;
+      const GAS_URL = 'https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec';
+      const VERSION = '4.0.0-app-only';
+      const subtitle = document.getElementById('subtitle');
+      const status = document.getElementById('status');
+      const iosInstall = document.getElementById('iosInstall');
+      const androidInstall = document.getElementById('androidInstall');
+      const installButton = document.getElementById('installButton');
+      let deferredPrompt = null;
 
-  const ua = navigator.userAgent || '';
-  const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isAndroid = /Android/i.test(ua);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  const isTouch = navigator.maxTouchPoints > 0;
-  const isTablet = isTouch && Math.min(window.innerWidth, window.screen.width || window.innerWidth) >= 760;
-  const isMobile = isAndroid || isIOS || (isTouch && window.innerWidth < 760);
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isAndroid = /Android/i.test(ua);
+      const isMobile = isIOS || isAndroid || /Mobile|Tablet/i.test(ua) || window.matchMedia('(max-width: 900px)').matches;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true;
+      const isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
 
-  function gasUrl(device) {
-    if (!GAS_URL || GAS_URL.indexOf('PASTE_GAS') === 0) {
-      return null;
-    }
-    const sep = GAS_URL.indexOf('?') >= 0 ? '&' : '?';
-    return GAS_URL + sep + 'device=' + encodeURIComponent(device) + '&shell=github';
-  }
+      document.documentElement.dataset.platform = isIOS ? 'ios' : isAndroid ? 'android' : isMobile ? 'mobile' : 'desktop';
 
-  function openApp() {
-    const device = isMobile || isTablet ? 'mobile' : 'desktop';
-    const url = gasUrl(device);
-    if (!url) {
-      statusEl.textContent = 'Chưa cấu hình GAS_URL trong Github/www/index.html';
-      installBtn.style.display = 'none';
-      return;
-    }
-    statusEl.textContent = 'Đã xác định ' + device + '. Đang mở FumeniERP…';
-    window.location.replace(url);
-  }
+      // App-only policy: no desktop web fallback.
+      if (!isMobile && !isNative) {
+        subtitle.textContent = 'Ứng dụng này chỉ được vận hành ở chế độ app mobile/tablet.';
+        status.textContent = 'Hãy mở bằng ứng dụng FumeniERP hoặc cài FumeniERP lên thiết bị di động.';
+        return;
+      }
 
-  window.addEventListener('beforeinstallprompt', event => {
-    event.preventDefault();
-    deferredPrompt = event;
-    installBtn.style.display = 'block';
-    statusEl.textContent = 'Có thể cài FumeniERP như ứng dụng trên Android.';
-  });
+      // Native Capacitor: GAS opens inside the native WebView, so there is no Safari/Chrome UI.
+      if (isNative) {
+        status.textContent = 'Đang mở FumeniERP…';
+        const target = `${GAS_URL}?device=mobile&app=native&v=${encodeURIComponent(VERSION)}`;
+        window.location.replace(target);
+        return;
+      }
 
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installBtn.style.display = 'none';
-    openApp();
-  });
+      // Standalone PWA shell: keep the app-looking entry point. Normal Safari/Chrome UI cannot
+      // be removed by webpage code; it disappears only after the site is launched as an app.
+      if (isStandalone) {
+        status.textContent = 'FumeniERP đã ở chế độ ứng dụng. Nếu ứng dụng chưa mở, hãy khởi chạy lại từ biểu tượng FumeniERP.';
+        return;
+      }
 
-  document.getElementById('ios-close').addEventListener('click', () => {
-    iosModal.classList.remove('on');
-    openApp();
-  });
+      status.textContent = 'Thiết bị chưa ở chế độ ứng dụng. Hãy cài FumeniERP để dùng toàn màn hình.';
+      if (isIOS) iosInstall.style.display = 'block';
+      if (isAndroid) androidInstall.style.display = 'block';
 
-  if (isIOS && !isStandalone) {
-    iosModal.classList.add('on');
-  } else {
-    setTimeout(openApp, 450);
-  }
+      window.addEventListener('beforeinstallprompt', event => {
+        event.preventDefault();
+        deferredPrompt = event;
+        installButton.style.display = 'block';
+      });
 
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
-    });
-  }
-</script>
+      installButton.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        try {
+          await deferredPrompt.prompt();
+          await deferredPrompt.userChoice;
+        } finally {
+          deferredPrompt = null;
+          installButton.style.display = 'none';
+        }
+      });
+
+      // Suppress page-level zoom/gesture controls where the browser allows it.
+      document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
+      document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
+      document.addEventListener('gestureend', e => e.preventDefault(), { passive: false });
+      document.addEventListener('touchmove', e => {
+        if (e.touches && e.touches.length > 1) e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('wheel', e => {
+        if (e.ctrlKey) e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('keydown', e => {
+        if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) e.preventDefault();
+      });
+      document.addEventListener('contextmenu', e => e.preventDefault());
+      document.addEventListener('dragstart', e => e.preventDefault());
+      document.addEventListener('selectstart', e => e.preventDefault());
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
