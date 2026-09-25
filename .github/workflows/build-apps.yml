@@ -1,0 +1,22 @@
+name: Build FumeniERP shell
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate public shell
+        run: |
+          test -f index.html
+          test -f config.js
+          test -f manifest.json
+          test -f sw.js
+          test -f logo.png
+          test -f background.svg
+          node --check config.js
+          echo "FumeniERP GitHub shell ready"
