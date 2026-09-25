@@ -1,20 +1,13 @@
 {
-  "name": "Fumeni ERP",
-  "short_name": "FumeniERP",
-  "id": "./",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
-  "description": "FumeniERP application shell",
-  "icons": [
-    {
-      "src": "./logo.png",
-      "sizes": "any",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+  "name":"FumeniERP",
+  "short_name":"FumeniERP",
+  "id":"./",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "orientation":"any",
+  "background_color":"#0b1426",
+  "theme_color":"#0b1426",
+  "description":"FumeniERP application shell",
+  "icons":[{"src":"./logo.png","sizes":"any","type":"image/png","purpose":"any maskable"}]
 }

@@ -1,420 +1,91 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0f172a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="FumeniERP">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="format-detection" content="telephone=no">
-
-  <title>FumeniERP</title>
-
-  <link rel="icon" type="image/png" href="./logo.png">
+  <link rel="icon" href="./logo.png">
   <link rel="apple-touch-icon" href="./logo.png">
   <link rel="manifest" href="./manifest.json">
-
+  <title>FumeniERP</title>
   <style>
-    :root {
-      color-scheme: dark;
-      --app-bg: #0f172a;
-      --panel-bg: #0b1220;
-      /* Visual viewport variables: only used by the mobile loader. */
-      --vv-top: 0px;
-      --vv-left: 0px;
-      --vv-width: 100vw;
-      --vv-height: 100dvh;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      height: 100dvh;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      position: fixed;
-      inset: 0;
-      background: var(--app-bg);
-      overscroll-behavior: none;
-      touch-action: manipulation;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    #app-iframe {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100dvh;
-      min-height: 100%;
-      border: 0;
-      display: block;
-      background: var(--app-bg);
-    }
-
-    #loading {
-      position: fixed;
-      inset: 0;
-      z-index: 40;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--app-bg);
-      transition: opacity .2s ease;
-      pointer-events: none;
-    }
-
-    #loading.hidden {
-      opacity: 0;
-    }
-
-    /* Mobile only: use the visual viewport so the loader center tracks the
-       same visible area used by the GAS/mobile WebView. Desktop is unchanged. */
-    html.mobile-runtime #loading {
-      inset: var(--vv-top) auto auto var(--vv-left);
-      width: var(--vv-width);
-      height: var(--vv-height);
-    }
-
-    .loading-box {
-      position: relative;
-      width: 84px;
-      height: 84px;
-      border-radius: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #111c31;
-      box-shadow: 0 20px 60px rgba(0,0,0,.35);
-    }
-
-    .loading-box img {
-      position: relative;
-      z-index: 2;
-      width: 48px;
-      height: 48px;
-      object-fit: contain;
-      border-radius: 14px;
-      display: block;
-    }
-
-    .spinner {
-      position: absolute;
-      z-index: 1;
-      left: 50%;
-      top: 50%;
-      width: 72px;
-      height: 72px;
-      margin: 0;
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,.12);
-      border-top-color: rgba(255,255,255,.78);
-      transform: translate(-50%, -50%);
-      transform-origin: center center;
-      animation: spin .85s linear infinite;
-      will-change: transform;
-    }
-
-    @keyframes spin {
-      from { transform: translate(-50%, -50%) rotate(0deg); }
-      to   { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-
-    #pwa-install-banner {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background: rgba(2, 6, 23, .94);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-    }
-
-    #pwa-install-banner.show { display: flex; }
-
-    .install-card {
-      width: min(390px, 100%);
-      background: #fff;
-      color: #0f172a;
-      border-radius: 28px;
-      padding: 22px;
-      box-shadow: 0 28px 80px rgba(0,0,0,.4);
-    }
-
-    .install-logo {
-      width: 62px;
-      height: 62px;
-      border-radius: 18px;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto 10px;
-      border: 1px solid #e2e8f0;
-      padding: 5px;
-      background: #fff;
-    }
-
-    .install-title {
-      margin: 0;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .install-desc {
-      margin: 8px 0 16px;
-      text-align: center;
-      color: #64748b;
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    .ios-help {
-      display: none;
-      border: 1px solid #bfdbfe;
-      background: #eff6ff;
-      color: #1e3a8a;
-      border-radius: 18px;
-      padding: 13px;
-      font-size: 11px;
-      line-height: 1.5;
-    }
-
-    .ios-help.show { display: block; }
-
-    .ios-help ol {
-      margin: 8px 0 0;
-      padding-left: 18px;
-    }
-
-    .ios-help li { margin: 5px 0; }
-
-    #btn-android-install {
-      display: none;
-      width: 100%;
-      border: 0;
-      border-radius: 14px;
-      padding: 13px 16px;
-      margin-top: 12px;
-      background: #059669;
-      color: white;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    #btn-android-install.show { display: block; }
-
-    .install-footer {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid #e2e8f0;
-      color: #94a3b8;
-      font-size: 10px;
-      text-align: center;
-    }
-
-    /* Không để browser gesture của trang làm ảnh hưởng app shell. */
-    img, a, button { -webkit-user-drag: none; }
+    :root{--bg:#0b1426;--fg:#fff;--muted:#b6c2d7}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg)}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    #shell{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;background:#0b1426 center/cover no-repeat url("./background.svg")}
+    #shell:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(6,15,31,.76),rgba(8,19,39,.38))}
+    #loading,#install-gate{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center}
+    .card{position:relative;z-index:2;width:min(410px,92vw);padding:28px;border-radius:26px;background:rgba(255,255,255,.96);color:#182233;box-shadow:0 30px 100px rgba(0,0,0,.35);text-align:center}
+    .logo{width:76px;height:76px;object-fit:contain;border-radius:20px;background:#fff;padding:5px;margin-bottom:12px}.spinner{width:30px;height:30px;border:3px solid #d7deea;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;margin:18px auto 0}@keyframes spin{to{transform:rotate(360deg)}}
+    #install-gate{display:none;background:rgba(3,10,24,.94);backdrop-filter:blur(18px)}#install-gate.show{display:flex}
+    h1{font-size:21px;margin:4px 0 8px}p{font-size:13px;line-height:1.6;color:#6c778b;margin:0 0 16px}ol{text-align:left;color:#42516b;font-size:12px;line-height:1.7;padding-left:21px}button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;background:#2563eb;color:#fff;width:100%}button.secondary{background:#eef2f7;color:#26344c;margin-top:8px}
+    #gas-frame{display:block;width:100%;height:100%;border:0;background:transparent;position:relative;z-index:1}
+    .hint{font-size:10px;color:#8c98aa;margin-top:14px}
+    @media(min-width:900px){#shell:before{background:linear-gradient(135deg,rgba(6,15,31,.54),rgba(8,19,39,.18))}.card{width:360px}}
   </style>
 </head>
 <body>
-  <div id="loading" aria-hidden="true">
-    <div class="loading-box">
-      <img src="./logo.png" alt="FumeniERP">
-      <div class="spinner"></div>
+<div id="shell">
+  <div id="loading" class="card">
+    <img class="logo" src="./logo.png" alt="FumeniERP"><h1>FumeniERP</h1><div class="spinner"></div><div class="hint">Đang kết nối ứng dụng...</div>
+  </div>
+  <div id="install-gate">
+    <div class="card">
+      <img class="logo" src="./logo.png" alt="FumeniERP">
+      <h1>Mở FumeniERP như App</h1>
+      <p>Phiên bản Mobile chỉ hoạt động khi FumeniERP được thêm vào Màn hình chính / cài đặt.</p>
+      <div id="ios-help"><b>iPhone / iPad</b><ol><li>Chọn Chia sẻ trên Safari.</li><li>Chọn Thêm vào Màn hình chính.</li><li>Mở FumeniERP từ biểu tượng vừa thêm.</li></ol></div>
+      <div id="android-help"><b>Android</b><ol><li>Chọn Cài đặt ứng dụng / Add to Home screen.</li><li>Mở lại bằng biểu tượng FumeniERP.</li></ol></div>
+      <button id="install-btn" style="display:none">Cài đặt App</button>
+      <button class="secondary" id="retry-btn">Tôi đã cài — mở lại</button>
     </div>
   </div>
-
-  <div id="pwa-install-banner" aria-modal="true" role="dialog">
-    <div class="install-card">
-      <img class="install-logo" src="./logo.png" alt="FumeniERP">
-      <h1 class="install-title">Mở FumeniERP như một App</h1>
-      <p class="install-desc">Để dùng giao diện toàn màn hình, hãy thêm FumeniERP vào màn hình chính. Khi mở từ icon, ứng dụng chạy ở chế độ standalone thay vì giao diện tab trình duyệt.</p>
-
-      <div id="ios-instructions" class="ios-help">
-        <strong>iPhone / iPad</strong>
-        <ol>
-          <li>Nhấn <strong>Chia sẻ</strong> trên Safari.</li>
-          <li>Chọn <strong>Thêm vào Màn hình chính</strong>.</li>
-          <li>Chọn <strong>Thêm</strong>, sau đó mở FumeniERP từ icon.</li>
-        </ol>
-      </div>
-
-      <button id="btn-android-install" type="button" onclick="installAndroidApp()">Cài đặt App</button>
-
-      <div class="install-footer">© 2026 FumeniERP • Vũ Nguyễn Hoàng Phúc</div>
-    </div>
-  </div>
-
-  <iframe
-    id="app-iframe"
-    title="FumeniERP"
-    allow="camera *; microphone *; geolocation *; publickey-credentials-get *; publickey-credentials-create *"
-    sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-downloads"
-    scrolling="yes"
-    referrerpolicy="no-referrer-when-downgrade">
-  </iframe>
-
-  <script>
-    'use strict';
-
-    // URL GAS dùng cho cả desktop và mobile. Chỉ khác query device.
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec';
-
-    const ua = navigator.userAgent || '';
-    const isIOS = /iPad|iPhone|iPod/i.test(ua) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isAndroid = /Android/i.test(ua);
-    const isMobileOrTablet = isIOS || isAndroid || /Mobile|Tablet/i.test(ua);
-
-    function isStandalone() {
-      return Boolean(
-        window.navigator.standalone ||
-        window.matchMedia('(display-mode: standalone)').matches ||
-        window.matchMedia('(display-mode: fullscreen)').matches
-      );
-    }
-
-    function getDeviceMode() {
-      return isMobileOrTablet ? 'mobile' : 'desktop';
-    }
-
-    // Add a runtime marker only on mobile/tablet so the desktop loader CSS is
-    // left exactly as-is. The loader then follows the visual viewport rather
-    // than the layout viewport when Safari's bars/safe areas are changing.
-    if (isMobileOrTablet) {
-      document.documentElement.classList.add('mobile-runtime');
-    }
-
-    function updateVisualViewportVars() {
-      if (!isMobileOrTablet) return;
-      const vv = window.visualViewport;
-      const width = vv?.width || document.documentElement.clientWidth || window.innerWidth || 1;
-      const height = vv?.height || window.innerHeight || document.documentElement.clientHeight || 1;
-      const top = vv?.offsetTop || 0;
-      const left = vv?.offsetLeft || 0;
-      const root = document.documentElement;
-      root.style.setProperty('--vv-top', Math.round(top) + 'px');
-      root.style.setProperty('--vv-left', Math.round(left) + 'px');
-      root.style.setProperty('--vv-width', Math.round(width) + 'px');
-      root.style.setProperty('--vv-height', Math.round(height) + 'px');
-    }
-
-    function buildGasUrl() {
-      const url = new URL(GAS_URL);
-      url.searchParams.set('device', getDeviceMode());
-      return url.toString();
-    }
-
-    function setIframeHeight() {
-      const iframe = document.getElementById('app-iframe');
-      if (!iframe) return;
-      const height = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight;
-      iframe.style.height = Math.max(320, Math.round(height)) + 'px';
-    }
-
-    function loadApp() {
-      const iframe = document.getElementById('app-iframe');
-      if (!iframe) return;
-      iframe.src = buildGasUrl();
-      setIframeHeight();
-    }
-
-    let deferredPrompt = null;
-
-    window.addEventListener('beforeinstallprompt', event => {
-      event.preventDefault();
-      deferredPrompt = event;
-      const button = document.getElementById('btn-android-install');
-      if (button && isAndroid && !isStandalone()) button.classList.add('show');
-    });
-
-    async function installAndroidApp() {
-      if (!deferredPrompt) {
-        alert('Chrome chưa cung cấp hộp thoại cài đặt. Hãy dùng menu của Chrome → Thêm vào màn hình chính.');
-        return;
-      }
-      deferredPrompt.prompt();
-      try {
-        await deferredPrompt.userChoice;
-      } finally {
-        deferredPrompt = null;
-      }
-      document.getElementById('pwa-install-banner')?.classList.remove('show');
-    }
-
-    function maybeShowInstallBanner() {
-      if (!isMobileOrTablet || isStandalone()) return;
-
-      const banner = document.getElementById('pwa-install-banner');
-      if (!banner) return;
-
-      if (isIOS) {
-        document.getElementById('ios-instructions')?.classList.add('show');
-      }
-      if (isAndroid && deferredPrompt) {
-        document.getElementById('btn-android-install')?.classList.add('show');
-      }
-
-      // Luôn hiển thị trên mobile/tablet khi chưa cài, theo chủ đích app-only.
-      banner.classList.add('show');
-    }
-
-    document.getElementById('app-iframe')?.addEventListener('load', () => {
-      const loading = document.getElementById('loading');
-      loading?.classList.add('hidden');
-      setTimeout(() => loading?.remove(), 250);
-    });
-
-    window.addEventListener('resize', setIframeHeight, { passive: true });
-    window.addEventListener('orientationchange', () => {
-      setTimeout(() => {
-        updateVisualViewportVars();
-        setIframeHeight();
-      }, 250);
-    }, { passive: true });
-    window.visualViewport?.addEventListener('resize', () => {
-      updateVisualViewportVars();
-      setIframeHeight();
-    }, { passive: true });
-    window.visualViewport?.addEventListener('scroll', updateVisualViewportVars, { passive: true });
-    updateVisualViewportVars();
-
-    // Chặn zoom/gesture của shell; không can thiệp UI bên trong GAS iframe.
-    document.addEventListener('wheel', event => {
-      if (event.ctrlKey) event.preventDefault();
-    }, { passive: false });
-    document.addEventListener('gesturestart', event => event.preventDefault(), { passive: false });
-    document.addEventListener('gesturechange', event => event.preventDefault(), { passive: false });
-    document.addEventListener('gestureend', event => event.preventDefault(), { passive: false });
-
-    window.addEventListener('load', () => {
-      loadApp();
-      // Chờ beforeinstallprompt nếu Android phát sinh muộn.
-      setTimeout(maybeShowInstallBanner, 700);
-    });
-
-    // Service worker chỉ phục vụ shell GitHub; không cache GAS cross-origin.
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
-      });
-    }
-  </script>
-</body>
-</html>
+  <iframe id="gas-frame" title="FumeniERP"></iframe>
+</div>
+<script src="./config.js"></script>
+<script>
+'use strict';
+const cfg=window.FUMENI_RUNTIME||{};
+const ua=navigator.userAgent||'';
+const isIOS=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const isAndroid=/Android/i.test(ua);
+function standalone(){return Boolean(navigator.standalone||matchMedia('(display-mode:standalone)').matches||matchMedia('(display-mode:fullscreen)').matches)}
+function smallTouch(){const touch=navigator.maxTouchPoints>0||isIOS||isAndroid;const w=innerWidth||screen.width,h=innerHeight||screen.height;return touch&&Math.min(w,h)<=820&&Math.max(w,h)<=1280}
+let deferredPrompt=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;const b=document.getElementById('install-btn');if(b)b.style.display='block'});
+function gasUrl(){
+  const u=new URL(cfg.GAS_URL);u.searchParams.set('shell','github');u.searchParams.set('ua',ua);
+  u.searchParams.set('device',smallTouch()?'mobile':'desktop');return u.toString();
+}
+function showGate(){
+  document.getElementById('loading').style.display='none';document.getElementById('install-gate').classList.add('show');
+  document.getElementById('ios-help').style.display=isIOS?'block':'none';document.getElementById('android-help').style.display=isAndroid?'block':'none';
+}
+async function install(){
+  if(!deferredPrompt){alert('Trình duyệt chưa cung cấp hộp thoại cài đặt. Hãy dùng menu của trình duyệt → Thêm vào Màn hình chính.');return}
+  deferredPrompt.prompt();try{await deferredPrompt.userChoice}finally{deferredPrompt=null}
+  setTimeout(()=>location.reload(),300);
+}
+function boot(){
+  document.getElementById('shell').style.backgroundImage=`url("${cfg.BACKGROUND_URL||'./background.svg'}")`;
+  if(smallTouch()&&!standalone()){showGate();return}
+  const frame=document.getElementById('gas-frame');frame.src=gasUrl();
+  frame.allow='camera *; microphone *; geolocation *; publickey-credentials-get *; publickey-credentials-create *';
+  document.getElementById('loading').style.display='flex';
+}
+document.getElementById('install-btn').onclick=install;document.getElementById('retry-btn').onclick=()=>{if(standalone())location.reload();else showGate()};
+window.addEventListener('load',boot);
+window.addEventListener('resize',()=>{if(!smallTouch()&&document.getElementById('install-gate').classList.contains('show'))location.reload()});
+window.addEventListener('message',e=>{
+  const d=e.data||{};if(!d.type)return;
+  if(d.type==='FUMENI_PING'){e.source?.postMessage({type:'FUMENI_PONG'},'*');}
+});
+document.getElementById('gas-frame').addEventListener('load',()=>{
+  document.getElementById('loading').style.display='none';
+});
+if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body></html>

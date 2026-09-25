@@ -1,9 +1,6 @@
 {
-  "appId": "com.fumeni.erp",
-  "appName": "Fumeni ERP",
-  "webDir": ".",
-  "server": {
-    "url": "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec?device=mobile",
-    "cleartext": false
-  }
+  "appId":"com.fumeni.erp",
+  "appName":"FumeniERP",
+  "webDir":".",
+  "server":{"url":"https://script.google.com/macros/s/REPLACE_WITH_NEW_DEPLOYMENT_ID/exec?shell=github&device=mobile","cleartext":false}
 }
