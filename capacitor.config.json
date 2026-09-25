@@ -2,5 +2,5 @@
   "appId":"com.fumeni.erp",
   "appName":"FumeniERP",
   "webDir":".",
-  "server":{"url":"https://script.google.com/macros/s/1xIGFn1HLSnJ2ONf-SgvlB4Z7DNFvVnIB9_j2mF-IhFB8X4skWpwvJ-Ka/exec?shell=github&device=mobile","cleartext":false}
+  "server":{"url":"https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec?shell=github&device=mobile","cleartext":false}
 }
