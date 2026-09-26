@@ -14,23 +14,42 @@
   <title>FumeniERP</title>
   <style>
     :root{--bg:#0b1426;--fg:#fff;--muted:#b6c2d7}
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg)}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg)}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     #shell{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;background:#0b1426 center/cover no-repeat url("./background.svg")}
     #shell:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(6,15,31,.76),rgba(8,19,39,.38))}
+    /* Các lớp phủ (#loading / #install-gate) chỉ lo việc PHỦ + CĂN GIỮA — .card là con riêng, tự co theo nội dung.
+       Đây chính là chỗ bản trước bị lỗi: #loading vừa "inset:0" vừa mang class "card" trên cùng 1 thẻ,
+       khiến khung card bị kéo giãn hết chiều cao và ghim sát trái thay vì nằm giữa màn hình. */
     #loading,#install-gate{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center}
     .card{position:relative;z-index:2;width:min(410px,92vw);padding:28px;border-radius:26px;background:rgba(255,255,255,.96);color:#182233;box-shadow:0 30px 100px rgba(0,0,0,.35);text-align:center}
-    .logo{width:76px;height:76px;object-fit:contain;border-radius:20px;background:#fff;padding:5px;margin-bottom:12px}.spinner{width:30px;height:30px;border:3px solid #d7deea;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;margin:18px auto 0}@keyframes spin{to{transform:rotate(360deg)}}
-    #install-gate{display:none;background:rgba(3,10,24,.94);backdrop-filter:blur(18px)}#install-gate.show{display:flex}
-    h1{font-size:21px;margin:4px 0 8px}p{font-size:13px;line-height:1.6;color:#6c778b;margin:0 0 16px}ol{text-align:left;color:#42516b;font-size:12px;line-height:1.7;padding-left:21px}button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;background:#2563eb;color:#fff;width:100%}button.secondary{background:#eef2f7;color:#26344c;margin-top:8px}
-    #gas-frame{display:block;width:100%;height:100%;border:0;background:transparent;position:relative;z-index:1}
+    .logo{width:76px;height:76px;object-fit:contain;border-radius:20px;background:#fff;padding:5px;margin-bottom:12px}
+    .spinner{width:30px;height:30px;border:3px solid #d7deea;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;margin:18px auto 0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #install-gate{display:none;background:rgba(3,10,24,.94);backdrop-filter:blur(18px)}
+    #install-gate.show{display:flex}
+    h1{font-size:21px;margin:4px 0 8px}
+    p{font-size:13px;line-height:1.6;color:#6c778b;margin:0 0 16px}
+    ol{text-align:left;color:#42516b;font-size:12px;line-height:1.7;padding-left:21px}
+    button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;background:#2563eb;color:#fff;width:100%}
+    button.secondary{background:#eef2f7;color:#26344c;margin-top:8px}
     .hint{font-size:10px;color:#8c98aa;margin-top:14px}
+    /* Chặn thao tác chạm/click lung tung trong lúc đang điều hướng sang app — trong suốt, không che gì cả,
+       chỉ hấp thụ sự kiện chạm để tránh double-tap/double-click gây lỗi trong khoảnh khắc chuyển trang. */
+    #clickGuard{position:fixed;inset:0;z-index:20;cursor:wait}
     @media(min-width:900px){#shell:before{background:linear-gradient(135deg,rgba(6,15,31,.54),rgba(8,19,39,.18))}.card{width:360px}}
   </style>
 </head>
 <body>
 <div id="shell">
-  <div id="loading" class="card">
-    <img class="logo" src="./logo.png" alt="FumeniERP"><h1>FumeniERP</h1><div class="spinner"></div><div class="hint">Đang kết nối ứng dụng...</div>
+  <div id="loading">
+    <div class="card">
+      <img class="logo" src="./logo.png" alt="FumeniERP">
+      <h1>FumeniERP</h1>
+      <div class="spinner"></div>
+      <div class="hint">Đang kết nối ứng dụng...</div>
+    </div>
   </div>
   <div id="install-gate">
     <div class="card">
@@ -43,7 +62,7 @@
       <button class="secondary" id="retry-btn">Tôi đã cài — mở lại</button>
     </div>
   </div>
-  <iframe id="gas-frame" title="FumeniERP"></iframe>
+  <div id="clickGuard" style="display:none"></div>
 </div>
 <script src="./config.js"></script>
 <script>
@@ -56,36 +75,46 @@ function standalone(){return Boolean(navigator.standalone||matchMedia('(display-
 function smallTouch(){const touch=navigator.maxTouchPoints>0||isIOS||isAndroid;const w=innerWidth||screen.width,h=innerHeight||screen.height;return touch&&Math.min(w,h)<=820&&Math.max(w,h)<=1280}
 let deferredPrompt=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;const b=document.getElementById('install-btn');if(b)b.style.display='block'});
+
+/**
+ * QUAN TRỌNG: KHÔNG nhúng script.google.com/exec bằng <iframe>. Apps Script Web App cần điều hướng
+ * TOÀN TRANG (top-level navigation) — nhúng iframe từ domain khác (github.io) khiến Google chặn hiển
+ * thị nội dung trong nhiều trường hợp và làm đứt kênh google.script.run phía trong (đây chính là lý do
+ * trước đó: load xong chỉ thấy nền, hoặc bấm đăng nhập bị treo vĩnh viễn không vào được app).
+ * Trang này CHỈ có nhiệm vụ: rút gọn link + xác định thiết bị + (bắt buộc cài PWA nếu là mobile) rồi
+ * điều hướng hẳn sang URL Web App thật — không giữ lại bất kỳ khung nào của trang này sau khi chuyển.
+ */
 function gasUrl(){
-  const u=new URL(cfg.GAS_URL);u.searchParams.set('shell','github');u.searchParams.set('ua',ua);
-  u.searchParams.set('device',smallTouch()?'mobile':'desktop');return u.toString();
+  const u=new URL(cfg.GAS_URL);
+  u.searchParams.set('view',smallTouch()?'mobile':'desktop');
+  u.searchParams.set('device',smallTouch()?'mobile':'desktop');
+  u.searchParams.set('ua',ua);
+  return u.toString();
 }
 function showGate(){
-  document.getElementById('loading').style.display='none';document.getElementById('install-gate').classList.add('show');
-  document.getElementById('ios-help').style.display=isIOS?'block':'none';document.getElementById('android-help').style.display=isAndroid?'block':'none';
+  document.getElementById('loading').style.display='none';
+  document.getElementById('install-gate').classList.add('show');
+  document.getElementById('ios-help').style.display=isIOS?'block':'none';
+  document.getElementById('android-help').style.display=isAndroid?'block':'none';
 }
 async function install(){
   if(!deferredPrompt){alert('Trình duyệt chưa cung cấp hộp thoại cài đặt. Hãy dùng menu của trình duyệt → Thêm vào Màn hình chính.');return}
-  deferredPrompt.prompt();try{await deferredPrompt.userChoice}finally{deferredPrompt=null}
+  document.getElementById('clickGuard').style.display='block';
+  deferredPrompt.prompt();
+  try{await deferredPrompt.userChoice}finally{deferredPrompt=null;document.getElementById('clickGuard').style.display='none'}
   setTimeout(()=>location.reload(),300);
 }
 function boot(){
   document.getElementById('shell').style.backgroundImage=`url("${cfg.BACKGROUND_URL||'./background.svg'}")`;
   if(smallTouch()&&!standalone()){showGate();return}
-  const frame=document.getElementById('gas-frame');frame.src=gasUrl();
-  frame.allow='camera *; microphone *; geolocation *; publickey-credentials-get *; publickey-credentials-create *';
-  document.getElementById('loading').style.display='flex';
+  // Chặn thao tác trong lúc chuyển trang để tránh double-click/double-tap gây lỗi ở form phía sau.
+  document.getElementById('clickGuard').style.display='block';
+  window.location.replace(gasUrl());
 }
-document.getElementById('install-btn').onclick=install;document.getElementById('retry-btn').onclick=()=>{if(standalone())location.reload();else showGate()};
+document.getElementById('install-btn').onclick=install;
+document.getElementById('retry-btn').onclick=()=>{if(standalone())location.reload();else showGate()};
 window.addEventListener('load',boot);
 window.addEventListener('resize',()=>{if(!smallTouch()&&document.getElementById('install-gate').classList.contains('show'))location.reload()});
-window.addEventListener('message',e=>{
-  const d=e.data||{};if(!d.type)return;
-  if(d.type==='FUMENI_PING'){e.source?.postMessage({type:'FUMENI_PONG'},'*');}
-});
-document.getElementById('gas-frame').addEventListener('load',()=>{
-  document.getElementById('loading').style.display='none';
-});
 if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
 </body></html>
