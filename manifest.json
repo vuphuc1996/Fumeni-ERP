@@ -1,0 +1,25 @@
+{
+  "name": "Fumeni ERP Engine",
+  "short_name": "Fumeni ERP",
+  "description": "Fumeni ERP Engine — hệ thống quản trị doanh nghiệp nội bộ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E1826",
+  "theme_color": "#0E1826",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
