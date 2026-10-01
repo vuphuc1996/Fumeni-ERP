@@ -6,7 +6,7 @@
  * Script luôn đi thẳng ra mạng, tránh hiển thị dữ liệu cũ/sai quyền hạn.
  * =====================================================================
  */
-var CACHE_NAME = "fumeni-bridge-v1";
+var CACHE_NAME = "fumeni-bridge-v2-iframe";
 var PRECACHE_URLS = ["./index.html", "./manifest.json"];
 
 self.addEventListener("install", function (event) {
@@ -25,7 +25,28 @@ self.addEventListener("activate", function (event) {
 
 self.addEventListener("fetch", function (event) {
   var url = event.request.url;
-  var isBridgeAsset = PRECACHE_URLS.some(function (p) { return url.indexOf(p.replace("./", "")) > -1; });
-  if (!isBridgeAsset) return; // mọi request khác (Apps Script, ảnh động...) luôn qua mạng thật
-  event.respondWith(caches.match(event.request).then(function (cached) { return cached || fetch(event.request); }));
+  var isIndex = url.indexOf("index.html") > -1 || url.endsWith("/");
+  var isManifest = url.indexOf("manifest.json") > -1;
+  if (!isIndex && !isManifest) return; // Apps Script + dữ liệu nghiệp vụ luôn qua mạng thật
+
+  if (isIndex) {
+    // Network-first: sau khi đổi bridge, người dùng không bị giữ index.html cũ
+    // chỉ vì service worker còn cache bản redirect trước đó.
+    event.respondWith(
+      fetch(event.request).then(function (response) {
+        var copy = response.clone();
+        caches.open(CACHE_NAME).then(function (cache) { cache.put(event.request, copy); });
+        return response;
+      }).catch(function () {
+        return caches.match(event.request);
+      })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request).then(function (cached) {
+      return cached || fetch(event.request);
+    })
+  );
 });

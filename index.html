@@ -5,11 +5,10 @@
   Deploy tại: https://vuphuc1996.github.io/Fumeni-ERP/  (URL này KHÔNG đổi,
   dù truy cập từ Laptop/PC hay từ app đã "Add to Home Screen" trên Mobile).
 
-  Vai trò: đây chỉ là 1 trang tĩnh trung gian — không chứa logic nghiệp vụ.
-  Nó phát hiện thiết bị, hiện màn hình chờ có logo, rồi chuyển hướng ngay vào
-  URL Web App thật của Apps Script (GAS_WEBAPP_URL bên dưới). Vì URL Apps Script
-  rất dài (script.google.com/macros/s/.../exec) và có thể đổi mỗi lần Deploy
-  bản mới, người dùng chỉ cần nhớ/lưu đúng 1 link GitHub này.
+  Vai trò: đây là PWA Shell tĩnh — không chứa logic nghiệp vụ.
+  Nó phát hiện thiết bị, hiện màn hình chờ có logo, rồi nhúng URL Web App thật
+  của Apps Script vào iframe. URL GitHub vẫn giữ nguyên trong suốt phiên làm việc;
+  người dùng chỉ cần nhớ/lưu đúng 1 link GitHub này.
 
   Mobile "biến thành app": file này + manifest.json + sw.js làm cho trang đủ
   điều kiện để trình duyệt Mobile cho phép "Thêm vào Màn hình chính". Sau khi
@@ -65,9 +64,51 @@
   .fallback a{ display:inline-block; margin-top:10px; background:var(--brass); color:var(--navy);
     text-decoration:none; font-weight:600; font-size:13px; padding:10px 22px; border-radius:6px; }
   .fallback .err{ color:#F3B4AE; font-size:12.5px; }
+
+  /* =====================================================================
+     IFRAME APP SHELL
+     GitHub remains the top-level page; Apps Script occupies the app viewport.
+     ===================================================================== */
+  body{ overflow:hidden; position:relative; }
+  #fumeniAppFrame{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    border:0;
+    margin:0;
+    padding:0;
+    background:var(--navy);
+    display:block;
+    opacity:0;
+    z-index:10;
+    transition:opacity .18s ease;
+  }
+  body.app-ready > #fumeniAppFrame{ opacity:1; }
+  #splashScreen{
+    position:fixed;
+    inset:0;
+    z-index:20;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(199,154,75,0.10), transparent 45%),
+      radial-gradient(circle at 80% 85%, rgba(199,154,75,0.06), transparent 40%),
+      var(--navy);
+    transition:opacity .18s ease, visibility .18s ease;
+  }
+  body.app-ready #splashScreen{ opacity:0; visibility:hidden; pointer-events:none; }
+  @media (max-width:820px){
+    #fumeniAppFrame{ min-height:100dvh; }
+    #splashScreen{ padding:env(safe-area-inset-top,0px) 16px env(safe-area-inset-bottom,0px); }
+  }
+
 </style>
 </head>
 <body>
+  <div id="splashScreen">
   <div class="rail"><span></span><span></span><span></span><span></span><span></span></div>
   <div class="logo-wrap"><img src="https://raw.githubusercontent.com/vuphuc1996/Fumeni-ERP/main/logo.png" alt="Fumeni ERP"></div>
   <h1>Fumeni ERP Engine</h1>
@@ -77,69 +118,142 @@
     <div class="err" id="fallbackErr"></div>
     <a href="#" id="fallbackLink">Vào hệ thống thủ công</a>
   </div>
+  </div>
 
 <script>
 (function(){
   // ===================================================================
-  // CẤU HÌNH — điền GAS_WEBAPP_URL sau khi Deploy Apps Script.
-  //
-  // CÁCH LẤY URL (không phải "chạy doGet" trong trình soạn thảo — doGet tự
-  // động chạy mỗi khi có người mở URL này, không cần bấm chạy tay):
-  //   1) Mở project Apps Script → góc trên bên phải bấm "Deploy" (Triển khai)
-  //      → "New deployment" (Bản triển khai mới).
-  //   2) Chọn loại "Web app". Execute as: "Me" — Who has access: "Anyone".
-  //   3) Bấm "Deploy", copy URL dạng
-  //      https://script.google.com/macros/s/AKfycb.../exec — đây chính là
-  //      GAS_WEBAPP_URL, dán vào dưới đây.
-  //   4) Mỗi lần sửa code và muốn người dùng thấy bản mới: vào lại Deploy →
-  //      "Manage deployments" → biểu tượng bút chì → chọn version mới → Deploy.
-  //      URL /exec giữ nguyên, KHÔNG cần đổi lại ở đây.
+  // FUMENI ERP — GITHUB PWA SHELL / IFRAME BRIDGE
+  // GitHub URL luôn là URL người dùng mở/lưu/cài PWA.
+  // Apps Script chỉ được tải bên trong iframe, KHÔNG redirect trang cha.
   // ===================================================================
   var CONFIG = {
+    // URL Web App Apps Script dùng cho bản test hiện tại bạn đã gửi.
     GAS_WEBAPP_URL: "https://script.google.com/macros/s/AKfycbxH2c2u9NxhW1lu6Ll2HOWFx932CU5anzcwV4pLMYV8go-kSPSt9iNNkK1eBMgrIYBc6Q/exec",
-    REDIRECT_DELAY_MS: 550 // giữ splash 1 nhịp ngắn để tránh chớp trắng khi mạng nhanh
+    LOAD_TIMEOUT_MS: 18000,
+    SPLASH_MIN_MS: 450
   };
+
+  var shellStartedAt = Date.now();
+  var frame = null;
+  var device = detectDevice();
+  var lang = detectLang();
+  var standalone = isStandalone();
 
   function detectDevice(){
     var isTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
     var isNarrow = window.matchMedia("(max-width: 820px)").matches;
     return (isTouch && isNarrow) ? "mobile" : "desktop";
   }
-  function detectLang(){ try { return localStorage.getItem("fumeni_lang") || "vie"; } catch (e) { return "vie"; } }
 
-  var device = detectDevice();
-  var lang = detectLang();
+  function detectLang(){
+    try {
+      var saved = localStorage.getItem("fumeni_lang") || "vie";
+      return String(saved).toLowerCase() === "eng" ? "eng" : "vie";
+    } catch (e) {
+      return "vie";
+    }
+  }
+
+  function isStandalone(){
+    try {
+      return window.matchMedia("(display-mode: standalone)").matches ||
+             window.matchMedia("(display-mode: fullscreen)").matches ||
+             window.navigator.standalone === true;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  function setStatus(text){
+    var el = document.getElementById("statusText");
+    if (el) el.textContent = text;
+  }
+
+  function showFallback(message, url){
+    var dots = document.getElementById("dots");
+    var box = document.getElementById("fallbackBox");
+    var err = document.getElementById("fallbackErr");
+    var link = document.getElementById("fallbackLink");
+    if (dots) dots.style.display = "none";
+    if (box) box.classList.add("show");
+    if (err) err.textContent = message || "";
+    if (link) {
+      link.href = url || "#";
+      link.style.display = url ? "inline-block" : "none";
+    }
+    setStatus("Không thể tải hệ thống trong khung ứng dụng.");
+  }
+
+  function hideSplash(){
+    var elapsed = Date.now() - shellStartedAt;
+    var wait = Math.max(0, CONFIG.SPLASH_MIN_MS - elapsed);
+    setTimeout(function(){
+      document.body.classList.add("app-ready");
+      var splash = document.getElementById("splashScreen");
+      if (splash) splash.setAttribute("aria-hidden", "true");
+    }, wait);
+  }
+
+  function buildTargetUrl(){
+    var sep = CONFIG.GAS_WEBAPP_URL.indexOf("?") > -1 ? "&" : "?";
+    return CONFIG.GAS_WEBAPP_URL + sep +
+      "device=" + encodeURIComponent(device) +
+      "&lang=" + encodeURIComponent(lang) +
+      "&standalone=" + (standalone ? "1" : "0") +
+      "&shell=github-iframe";
+  }
+
+  function mountFrame(targetUrl){
+    frame = document.createElement("iframe");
+    frame.id = "fumeniAppFrame";
+    frame.title = "Fumeni ERP";
+    frame.src = targetUrl;
+    frame.setAttribute("allow", "camera; microphone; geolocation; clipboard-read; clipboard-write; fullscreen; publickey-credentials-get; publickey-credentials-create");
+    frame.setAttribute("allowfullscreen", "true");
+    frame.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+    frame.setAttribute("loading", "eager");
+    frame.addEventListener("load", function(){
+      clearTimeout(loadTimer);
+      setStatus("Fumeni ERP");
+      hideSplash();
+      // Chỉ gửi context không nhạy cảm. Token/session không bao giờ truyền qua bridge.
+      try {
+        frame.contentWindow.postMessage({
+          type: "FUMENI_SHELL_CONTEXT",
+          device: device,
+          lang: lang,
+          standalone: standalone,
+          version: "github-iframe-v1"
+        }, "*");
+      } catch(e) {}
+    });
+    frame.addEventListener("error", function(){
+      showFallback("Không thể tải Apps Script Web App.", targetUrl);
+    });
+
+    document.body.appendChild(frame);
+
+    var loadTimer = setTimeout(function(){
+      showFallback("Apps Script phản hồi quá lâu hoặc bị trình duyệt chặn trong iframe.", targetUrl);
+    }, CONFIG.LOAD_TIMEOUT_MS);
+  }
 
   if (!CONFIG.GAS_WEBAPP_URL || CONFIG.GAS_WEBAPP_URL.indexOf("__DEIN_DEPLOYMENT_ID__") > -1) {
-    showFallback("Chưa cấu hình GAS_WEBAPP_URL trong index.html — vui lòng Deploy Apps Script dưới dạng Web App rồi cập nhật lại đường dẫn.");
+    showFallback("Chưa cấu hình GAS_WEBAPP_URL trong index.html.");
     return;
   }
 
-  var targetUrl = CONFIG.GAS_WEBAPP_URL + "?device=" + device + "&lang=" + lang;
-
-  setTimeout(function(){
-    try {
-      window.location.replace(targetUrl);
-      setTimeout(function(){ showFallback(null, targetUrl); }, 4000); // phòng khi trình duyệt chặn replace
-    } catch (e) {
-      showFallback("Không thể tự động chuyển hướng. Vui lòng bấm vào nút bên dưới.", targetUrl);
-    }
-  }, CONFIG.REDIRECT_DELAY_MS);
-
-  function showFallback(errMsg, url){
-    document.getElementById("dots").style.display = "none";
-    document.getElementById("statusText").textContent = "Không thể tự động chuyển vào hệ thống.";
-    var box = document.getElementById("fallbackBox");
-    box.classList.add("show");
-    document.getElementById("fallbackErr").textContent = errMsg || "";
-    var link = document.getElementById("fallbackLink");
-    link.href = url || "#";
-    if (!url) link.style.display = "none";
-  }
+  // Hiển thị device context ở shell; CSS/layout của GAS vẫn do chính Apps Script quyết định.
+  document.documentElement.dataset.device = device;
+  document.documentElement.dataset.lang = lang;
+  document.documentElement.dataset.standalone = standalone ? "1" : "0";
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(function(){ /* im lặng nếu môi trường không hỗ trợ */ });
+    navigator.serviceWorker.register("./sw.js").catch(function(){ /* không chặn app */ });
   }
+
+  mountFrame(buildTargetUrl());
 })();
 </script>
 </body>
