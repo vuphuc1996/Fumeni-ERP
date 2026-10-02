@@ -39,7 +39,7 @@
   body{
     display:flex; align-items:center; justify-content:center; flex-direction:column;
     font-family:'Inter', -apple-system, sans-serif; color:#F5F2EC;
-    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+    padding-top:0; padding-bottom:0;
     background:
       radial-gradient(circle at 20% 15%, rgba(199,154,75,0.10), transparent 45%),
       radial-gradient(circle at 80% 85%, rgba(199,154,75,0.06), transparent 40%),
@@ -104,7 +104,7 @@
   body.app-ready #splashScreen{ opacity:0; visibility:hidden; pointer-events:none; }
   @media (max-width:820px){
     #fumeniAppFrame{ min-height:100dvh; }
-    #splashScreen{ padding:env(safe-area-inset-top,0px) 16px env(safe-area-inset-bottom,0px); }
+    #splashScreen{ padding:env(safe-area-inset-top,0px) 16px 0; }
   }
 
 </style>
